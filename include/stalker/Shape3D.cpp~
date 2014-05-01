@@ -1,0 +1,117 @@
+#include "Shape3D.hpp"
+
+template <typename T>
+bool Shape3D<T>::saveMesh(){
+	/*int a = pcl::io::savePCDFileBinary("view", _shape);*/
+	return true;
+}
+
+
+template <typename T>
+void Shape3D<T>::computeDescriptors(){
+	pcl::SHOTEstimationOMP<T, NormalType, DescriptorType> descr_est;
+	descr_est.setRadiusSearch (_descrRad);
+	descr_est.setInputCloud (_shape_keypoints);
+	descr_est.setInputNormals (_shape_normals);
+	descr_est.setSearchSurface (_shape);
+	descr_est.compute (*_desc);
+}
+
+template <typename T>
+void Shape3D<T>::update(typename pcl::PointCloud<T>::Ptr p){
+
+	//Clustering pipe
+	if(resol==true){
+		resolutionInvariance();
+	}
+	this->estimNormals();
+	this->downsample();
+	this->computeDescriptors();
+	
+
+}
+
+template <typename T>
+void Shape3D<T>::estimNormal(){
+	pcl::NormalEstimationOMP<T, NormalType> norm_est;
+	norm_est.setKSearch (10);
+	norm_est.setInputCloud (_shape);
+	norm_est.compute (*_shape_normals);
+}
+
+template <typename T>
+bool Shape3D<T>::loadMesh(std::string path){
+	if (pcl::io::loadPCDFile (path, *_shape) < 0)
+	{
+		std::cout << "Error loading model cloud." << std::endl;
+		return false;
+	}
+	return true;
+}
+
+template <typename T>
+void Shape3D<T>::downsample(){
+	pcl::PointCloud<int> sampled_indices;
+
+	pcl::UniformSampling<T> uniform_sampling;
+	uniform_sampling.setInputCloud (_shape);
+	uniform_sampling.setRadiusSearch (_shape_ss);
+	uniform_sampling.compute (sampled_indices);
+	pcl::copyPointCloud (*_shape, sampled_indices.points, *_shape_keypoints);
+	std::cout << "Model total points: " << _shape->size () << "; Selected Keypoints: " << _shape_keypoints->size () << std::endl;
+}
+
+
+template <typename T>
+void Shape3D<T>::resolutionInvariance(){
+
+	float resolution = static_cast<float> (computeCloudResolution (_shape));
+	if (resolution != 0.0f)
+	{
+		_shape_ss   *= resolution;
+		//rf_rad_     *= resolution;
+		_descrRad  *= resolution;
+		cg_size_    *= resolution;
+	}
+
+	/*std::cout << "Model resolution:       " << resolution << std::endl;
+	std::cout << "Model sampling size:    " << model_ss_ << std::endl;
+	std::cout << "Scene sampling size:    " << scene_ss_ << std::endl;
+	std::cout << "LRF support radius:     " << rf_rad_ << std::endl;
+	std::cout << "SHOT descriptor radius: " << descr_rad_ << std::endl;
+	std::cout << "Clustering bin size:    " << cg_size_ << std::endl << std::endl;*/
+
+}
+
+template <typename T>
+double Shape3D<T>::computeCloudResolution (typename pcl::PointCloud<T>::ConstPtr &cloud)
+{
+	double res = 0.0;
+	int n_points = 0;
+	int nres;
+	std::vector<int> indices (2);
+	std::vector<float> sqr_distances (2);
+	pcl::search::KdTree<T> tree;
+	tree.setInputCloud (cloud);
+
+	for (size_t i = 0; i < cloud->size (); ++i)
+	{
+		if (! pcl_isfinite ((*cloud)[i].x))
+		{
+			continue;
+		}
+		//Considering the second neighbor since the first is the point itself.
+		nres = tree.nearestKSearch (i, 2, indices, sqr_distances);
+		if (nres == 2)
+		{
+			res += sqrt (sqr_distances[1]);
+			++n_points;
+		}
+	}
+	if (n_points != 0)
+	{
+		res /= n_points;
+	}
+	return res;
+}
+
