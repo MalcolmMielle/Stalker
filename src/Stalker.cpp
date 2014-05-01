@@ -14,6 +14,7 @@ int main (int argc, char **argv){
 	ros::NodeHandle my_node;
 
 	this is albert kjvnasn
+	And malcolm
 
 	//Timer, Subscriber, Publisher description
 	ros::Timer _imlost;
