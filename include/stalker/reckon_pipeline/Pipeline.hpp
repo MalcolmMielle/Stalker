@@ -1,6 +1,8 @@
 #ifndef PIPELINE_RECKON_H
 #define PIPELINE_RECKON_H
 
+//Testing Malcolm
+
 #include "Shape3D.hpp"
 #include "Shape3DLocal.hpp"
 #include <iostream>
