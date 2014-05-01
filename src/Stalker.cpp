@@ -13,7 +13,6 @@ int main (int argc, char **argv){
 	ros::init(argc, argv, "Stalker");
 	ros::NodeHandle my_node;
 	
-	
 	//Timer, Subscriber, Publisher description
 	ros::Timer _imlost;
 	ros::Subscriber pointcloud_sub;
