@@ -3,25 +3,100 @@
 
 #include "Shape3D.hpp"
 
-template <typename T, typename DescriptorType>
-class ShapeLocal : public Shape<T, DescriptorType> {
-	public :
-	bool resol;
-	pcl::NormalEstimationOMP<T, NormalType> norm_est;
-	
-	ShapeLocal(const std::string& name) : Shape<T, DescriptorType>(name), resol(false){};
-	ShapeLocal(const std::string& name, double sampling_size) : Shape<T, DescriptorType>(name, sampling_size), resol(false){};
-	ShapeLocal(const std::string& name, double sampling_size, double descriptor_radius) : Shape<T, DescriptorType>(name, sampling_size, descriptor_radius), resol(false){};
+/******************HOW YOU'RE SUPPOSED TO CODE THAT**********
+template< typename _T, size_t num >
+struct FooFuncBase {
+    void Func() {
+        printf("Hello world!");
+    }
+};
 
-	virtual void setNormalEstimator(pcl::NormalEstimationOMP<T, NormalType> norm, int K){
-		norm_est=norm; norm_est.setKSearch(K);
+template< typename _T >
+struct FooFuncBase< _T, 1 > {
+    void Func() {
+        printf("Hi!");
+    }
+};
+
+template< typename _T, size_t num >
+struct Foo : public FooFuncBase< _T, num > {
+  void OtherFuncWhoseImplementationDoesNotDependOnNum() {
+    ...
+  }
+};
+
+************************************************************/
+
+/*******TEMPLATE SPECIALIZATION**********/
+
+template <typename T, typename DescriptorType>
+class ShapeLocalBase : public Shape<T, DescriptorType>{
+	public :
+	
+	ShapeLocalBase(const std::string& name) : Shape<T, DescriptorType>(name){};
+	ShapeLocalBase(const std::string& name, double sampling_size) : Shape<T, DescriptorType>(name, sampling_size){};
+	ShapeLocalBase(const std::string& name, double sampling_size, double descriptor_radius) : Shape<T, DescriptorType>(name, sampling_size, descriptor_radius){};
+	
+	/***/
+	
+	virtual void computeDescriptors(){
+		pcl::SHOTEstimationOMP<T, NormalType, DescriptorType> descr_est;
+		descr_est.setRadiusSearch (this->_descrRad);
+		descr_est.setInputCloud (this->_shape_keypoints);
+		descr_est.setInputNormals (this->_shape_normals);
+		descr_est.setSearchSurface (this->_shape);
+		std::cout<<"Computin"<<std::endl;
+		descr_est.compute (*(this->_desc)); //pointer of desc
+	}
+		
+};
+
+
+template <typename T>
+class ShapeLocalBase<T, pcl::SHOT1344> : public Shape<T, pcl::SHOT1344>{
+	public :
+		
+	ShapeLocalBase(const std::string& name) : Shape<T, pcl::SHOT1344>(name){};
+	ShapeLocalBase(const std::string& name, double sampling_size) : Shape<T, pcl::SHOT1344>(name, sampling_size){};
+	ShapeLocalBase(const std::string& name, double sampling_size, double descriptor_radius) : Shape<T, pcl::SHOT1344>(name, sampling_size, descriptor_radius){};
+	
+	/***/
+	
+	virtual void computeDescriptors(){
+		// USING THE COLORS
+		std::cout << "Color Descriptors !"<<std::endl;
+		pcl::SHOTColorEstimationOMP<T, NormalType, pcl::SHOT1344> descr_est;
+		descr_est.setRadiusSearch (this->_descrRad);
+		descr_est.setInputCloud (this->_shape_keypoints);
+		descr_est.setInputNormals (this->_shape_normals);
+		descr_est.setSearchSurface (this->_shape);
+		std::cout<<"Computin"<<std::endl;
+		descr_est.compute (*(this->_desc)); //pointer of desc
+	}
+	
+};
+
+
+/***************CLASS FINAL**********/
+
+template <typename T, typename DescriptorType>
+class ShapeLocal : public ShapeLocalBase<T, DescriptorType> {
+	public :
+	bool resol;	
+	int _k; //Normal estimation diameter.
+	ShapeLocal(const std::string& name) : ShapeLocalBase<T, DescriptorType>(name), resol(false), _k(10){};
+	ShapeLocal(const std::string& name, double sampling_size) : ShapeLocalBase<T, DescriptorType>(name, sampling_size), resol(false), _k(10){};
+	ShapeLocal(const std::string& name, double sampling_size, double descriptor_radius) : ShapeLocalBase<T, DescriptorType>(name, sampling_size, descriptor_radius), resol(false), _k(10){};
+
+	virtual void setNormalEstimator(int k){
+		_k=k;
 	}
 	//update Shape state
 	
 	virtual void compute();
 	//Load a model
 	
-	virtual void computeDescriptors();
+	
 	virtual double computeCloudResolution(typename pcl::PointCloud<T>::Ptr cloud);
 	//TODO : move to Preprocessing with downsample !
 	virtual void estimNormal();
@@ -30,16 +105,6 @@ class ShapeLocal : public Shape<T, DescriptorType> {
 };
 
 
-template <typename T, typename DescriptorType>
-inline void ShapeLocal<T, DescriptorType>::computeDescriptors(){
-	pcl::SHOTEstimationOMP<T, NormalType, DescriptorType> descr_est;
-	descr_est.setRadiusSearch (this->_descrRad);
-	descr_est.setInputCloud (this->_shape_keypoints);
-	descr_est.setInputNormals (this->_shape_normals);
-	descr_est.setSearchSurface (this->_shape);
-	std::cout<<"Computin"<<std::endl;
-	descr_est.compute (*(this->_desc)); //pointer of desc
-}
 
 template <typename T, typename DescriptorType>
 inline void ShapeLocal<T, DescriptorType>::compute(){
@@ -60,7 +125,7 @@ template <typename T, typename DescriptorType>
 inline void ShapeLocal<T, DescriptorType>::estimNormal(){
 	
 	pcl::NormalEstimationOMP<T, NormalType> norm_est2;
-	norm_est2.setKSearch (10);
+	norm_est2.setKSearch (_k);
 	norm_est2.setInputCloud (this->_shape);
 	norm_est2.compute (*(this->_shape_normals));
 
@@ -133,6 +198,9 @@ inline double ShapeLocal<T, DescriptorType>::computeCloudResolution (typename pc
 	}
 	return res;
 }
+
+
+/*************SHAPE COLOR******************/
 
 
 
