@@ -60,6 +60,11 @@ class CorrespGrouping : public Pipeline<T, pcl::SHOT352> {
 	}
 	
 	//OVERWRITTEN FUNTION
+	virtual void print(Gui<T,pcl::SHOT352>* g){
+		g->printPipeline((*this));
+	}
+	
+	//OVERWRITTEN FUNTION
 	//virtual void setScene(typename pcl::PointCloud<T>::Ptr& obj){this->_scene->set(obj);}
 	//virtual void setObject(typename pcl::PointCloud<T>::Ptr& obj){this->_object->set(obj);}
 
