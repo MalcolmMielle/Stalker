@@ -15,11 +15,18 @@
 #include <pcl/features/shot_omp.h>
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/keypoints/uniform_sampling.h>
+#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/io/pcd_io.h>
+
+#include "Gui.hpp"
 
 //#define DescriptorType pcl::SHOT352
 #define NormalType pcl::Normal 
 #define RFType pcl::ReferenceFrame 
+
+/*template<typename T, typename DescriptorType>
+class Gui;*/
+
 
 template <typename T, typename DescriptorType>
 class Shape{
@@ -65,8 +72,17 @@ class Shape{
 	virtual void update(typename pcl::PointCloud<T>::Ptr& p);
 	virtual bool loadMesh(std::string path);
 	virtual bool saveMesh();
-
+	
+	//Print interface
+	virtual void addPrint(Gui<T, DescriptorType>& gui)=0;
+	virtual void printupdate(Gui<T, DescriptorType>& gui)=0;
 };
+
+template <typename T, typename DescriptorType>
+inline void Shape<T, DescriptorType>::addPrint(Gui<T, DescriptorType>& gui){
+		std::cout<<"Je suis une shape"<<std::endl;
+		gui.add(*this);
+}
 
 template <typename T, typename DescriptorType>
 inline void Shape<T, DescriptorType>::update(typename pcl::PointCloud<T>::Ptr& p){

@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	BOOST_CHECK_EQUAL(cg.getAllScenes().size(), 4);
 	
-	std::cout<<"First print"<<std::endl;
-	cg.print();
+	std::cout<<"First printinfo"<<std::endl;
+	cg.printinfo();
 	
 	cg.removeObject(0);
 	cg.removeObject(0);
@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(trying)
 	cg.removeObject(0);
 	cg.removeObject(0);
 	
-	std::cout<<"Second print"<<std::endl;
-	cg.print();
+	std::cout<<"Second printinfo"<<std::endl;
+	cg.printinfo();
 	
 	cg.addObject(cloud);
 	cg.addObject(cloud);
@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(trying)
 	cg.addObject(cloud);
 	
 
-	std::cout<<"Third print"<<std::endl;
-	cg.print();
+	std::cout<<"Third printinfo"<<std::endl;
+	cg.printinfo();
 	cg.clearObjects();
-	std::cout<<"fourth print"<<std::endl;
-	cg.print();
+	std::cout<<"fourth printinfo"<<std::endl;
+	cg.printinfo();
 	
 	//BOOST_CHECK_EQUAL(cg.getAllObjects().size(),2);
 	//cg.addObject(cloud2);

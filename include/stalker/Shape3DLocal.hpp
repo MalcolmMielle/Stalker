@@ -2,6 +2,7 @@
 #define SHAPE3DLOCAL_MALCOLM_H
 
 #include "Shape3D.hpp"
+//#include "Gui.hpp"
 
 /******************HOW YOU'RE SUPPOSED TO CODE THAT**********
 template< typename _T, size_t num >
@@ -102,6 +103,35 @@ class ShapeLocal : public ShapeLocalBase<T, DescriptorType> {
 	virtual void estimNormal();
 	virtual void downsample();
 	virtual void resolutionInvariance();
+	
+	//PRINT
+	//Print interface
+	virtual void addPrint(Gui<T, DescriptorType>& gui){
+		std::cout<<"Je suis une shape locale"<<std::endl;
+		gui.add(*this);
+	}
+	
+	virtual void printupdate(Gui<T, DescriptorType>& gui){
+		gui.update(*this);
+	}
+
+	
+	/*virtual void addPrint(Gui<T, DescriptorType>& gui){
+		std::cout<<"Je suis une shape LOCALE"<<std::endl;
+		gui.add(*this);
+	}*/
+	
+	/*virtual void addPrint(Gui<T, DescriptorType>* gui){
+		gui->add(this->_shape, this->_id);
+		//printKeyPoints(gui);
+		
+	}
+	
+	virtual void printKeyPoints(Gui<T, DescriptorType>* gui){
+		pcl::visualization::PointCloudColorHandlerCustom<T> scene_keypoints_color_handler (this->_shape_keypoints, 0, 0, 255);
+		gui->viewer->addPointCloud (this->_shape_keypoints, scene_keypoints_color_handler, "scene_keypoints");
+		gui->viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "scene_keypoints");
+	}*/
 };
 
 

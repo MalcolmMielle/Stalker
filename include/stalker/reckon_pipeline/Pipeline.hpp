@@ -5,6 +5,7 @@
 
 #include "Shape3D.hpp"
 #include "Shape3DLocal.hpp"
+#include "Gui.hpp"
 #include <iostream>
 #include <stdio.h>
 #include <vector>
@@ -68,7 +69,7 @@ class Pipeline{
 	
 	virtual void clearObjects();
 	virtual void clearScenes();
-	virtual void print(){
+	virtual void print_info(){
 		std::cout<<std::endl<<"********* Objects *********"<<std::endl;
 		for(typename std::vector<Shape<PointType, DescriptorType>*>::iterator it = _objects.begin(); it!=_objects.end();){
 		//std::cout<<"Cleaning object size : "<<_objects.size()<<std::endl;
@@ -86,6 +87,10 @@ class Pipeline{
 		std::cout<<std::endl;
 	};
 	
+	virtual void affiche(){std::cout << "I souldn't exist cause 'm a pipeline with no meaning ;)"<<std::endl;}
+	virtual void print(Gui<PointType, DescriptorType>* g){
+		g->printPipeline((*this));
+	}
 };
 
 template <typename T, typename DescriptorType>

@@ -11,9 +11,23 @@
 #include <pcl/console/parse.h>
 #include <iostream>
 #include <pcl/io/io.h>
+
+template<typename T, typename DescriptorType>
+class ShapeLocal;
+
+template<typename T, typename DescriptorType>
+class Shape;
+
+template<typename T, typename DescriptorType>
+class Pipeline;
+
+template<typename T>
+class CorrespGrouping;
+
 #include <pcl/io/pcd_io.h>
 
-template <typename T>
+
+template <typename T, typename DescriptorType>
 class Gui{
 	public : 
 	pcl::visualization::PCLVisualizer* viewer;
@@ -29,18 +43,21 @@ class Gui{
 		std::cout<<"deleting the gui"<<std::endl;
 		delete viewer;}
 	
-	virtual void add(typename pcl::PointCloud<T>::Ptr cloud, std::string name){
-		viewer->addPointCloud<T> (cloud, name);
-		viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, name);
-	}		
+	virtual void add(Shape<T, DescriptorType>& sh)=0;
+	virtual void add(ShapeLocal<T, DescriptorType>& sh)=0;
+	virtual void printPipeline(Pipeline<T, DescriptorType>& p)=0;
+	virtual void printPipeline(CorrespGrouping<T>& sh)=0;
+	/*{
+		//sh->addPrint(this);
+		add(sh->getCloud(), sh->getName() );
+	}*/
 	
-	virtual void update(typename pcl::PointCloud<T>::Ptr cloud, std::string name){
-		viewer->updatePointCloud(cloud, name);
-	}
+	virtual void add(typename pcl::PointCloud<T>::Ptr cloud, std::string name)=0;		
 	
-	virtual void show(){
-		viewer->spinOnce (100);
-	}
+	virtual void update(typename pcl::PointCloud<T>::Ptr cloud, std::string name)=0;
+	virtual void update(Shape<T, DescriptorType>& sh)=0;
+	virtual void update(ShapeLocal<T, DescriptorType>& sh)=0;
+	virtual void show()=0;
 
 
 };

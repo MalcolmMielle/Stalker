@@ -160,6 +160,9 @@ target_link_libraries(tnormal ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_
 add_executable(maint src/Test/main.cpp)
 target_link_libraries(maint ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
+add_executable(tgui1 src/Test/tgui1.cpp)
+target_link_libraries(tgui1 ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+
 add_executable(stalker_node src/Stalker.cpp)
 target_link_libraries(stalker_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
