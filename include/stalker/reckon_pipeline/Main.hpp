@@ -153,7 +153,7 @@ inline void Main<T, DescriptorType>::checkSizeScene()
 
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::setScene(typename pcl::PointCloud<T>::Ptr& c){
-	this->_scene=c; 
+	this->_scene=c;  
 	this->_pipeline->setScene(_scene);
 }
 template <typename T, typename DescriptorType>
