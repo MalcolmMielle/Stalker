@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZRGBA>);
 	pcl::io::loadPCDFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
 	
-	CorrespGrouping<pcl::PointXYZRGBA> cg(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene",0.03));
+	/*CorrespGrouping<pcl::PointXYZRGBA>* cg = new CorrespGrouping<pcl::PointXYZRGBA>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene",0.03));
 	
 	//std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > rototranslations;
 	
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	//gui1.show();
 	
-	MainGraphic<PointType, pcl::SHOT352> mg;
-	mg.setPipeline(&cg);
+	/*MainGraphic<PointType, pcl::SHOT352> mg;
+	mg.setPipeline(cg);
 	mg.setObject(object);
 	mg.setScene(cloud2);
 	mg.doWork();
@@ -79,9 +79,24 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	//mg.getGui()->printPipeline(cg);
 	
-	while(1){
+	while(!mg.stopGui()){
 		mg.getGui()->show();
+	}*/
+	
+	std::cout<<"LETS CONTINUE"<<std::endl<<std::endl;
+	CorrespGrouping<pcl::PointXYZRGBA>* cg2  = new CorrespGrouping<pcl::PointXYZRGBA>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene",0.03));
+	
+	MainGraphic<PointType, pcl::SHOT352> mg2(object, cloud2);
+	
+	mg2.setPipeline(cg2);
+	//std::cout<<"LETS ADD OBJECT"<<std::endl<<std::endl;
+	mg2.addObject(object);
+	std::cout<<"LETS ADD SCENE"<<std::endl<<std::endl;
+	mg2.addScene(cloud2);
+	//std::cout<<"LETS DO WORK"<<std::endl<<std::endl;
+	mg2.doWork();
+	
+	while(!mg2.stopGui()){
+		mg2.getGui()->show();
 	}
-	
-	
 }

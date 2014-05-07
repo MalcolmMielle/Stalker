@@ -54,6 +54,10 @@ class Pipeline{
 	//New interface : 
 	virtual const std::vector<Shape<PointType, DescriptorType> *>& getAllObjects(){return _objects;}
 	virtual const std::vector<Shape<PointType, DescriptorType> *>& getAllScenes(){return _scenes;}
+	virtual int getSizeObjects(){ return _objects.size();}
+	virtual int getSizeScenes(){ return _scenes.size();}
+	virtual Shape<PointType, DescriptorType>* getObject(int i){return _objects[i];}
+	virtual Shape<PointType, DescriptorType>* getScene(int i){return _scenes[i];}
 	
 	virtual void addObject(Shape<PointType, DescriptorType>* o);
 	virtual void addScene(Shape<PointType, DescriptorType>* o);
