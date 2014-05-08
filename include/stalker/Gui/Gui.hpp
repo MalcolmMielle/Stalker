@@ -57,7 +57,11 @@ class Gui{
 	virtual void update(typename pcl::PointCloud<T>::Ptr cloud, std::string name)=0;
 	virtual void update(Shape<T, DescriptorType>& sh)=0;
 	virtual void update(ShapeLocal<T, DescriptorType>& sh)=0;
-	virtual void show()=0;
+	
+	virtual bool wasStopped(){return viewer->wasStopped ();}
+	virtual void show(){
+		this->viewer->spinOnce (100);
+	}	
 
 
 };

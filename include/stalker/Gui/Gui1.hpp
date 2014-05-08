@@ -27,10 +27,6 @@ class Gui1 : public Gui<T, DescriptorType>{
 		this->viewer->updatePointCloud(cloud, name);
 	}
 	
-	virtual void show(){
-		this->viewer->spinOnce (100);
-	}	
-	
 	virtual void add(Shape<T, DescriptorType>& sh){
 		std::cout<<"Adding shape"<<std::endl;
 		sh.addPrint(*this);

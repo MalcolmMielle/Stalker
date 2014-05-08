@@ -22,7 +22,7 @@
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/common/transforms.h>
 #include <pcl/console/parse.h>
-
+#include "pcl/io/ply_io.h"
 #include "Gui1.hpp"
 #include "MainGraphic.hpp"
 
@@ -95,8 +95,21 @@ BOOST_AUTO_TEST_CASE(trying)
 	mg2.addScene(cloud2);
 	//std::cout<<"LETS DO WORK"<<std::endl<<std::endl;
 	mg2.doWork();
-	
+	mg2.getPipeline()->affiche();
 	while(!mg2.stopGui()){
 		mg2.getGui()->show();
+	}
+	
+	/*****LOAD PLY TRYING***/
+	/******LOAD MODEL TO BE CHANGED***********/
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr model (new pcl::PointCloud<pcl::PointXYZRGBA>);
+	//pcl::io::loadPLYFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/mugg.ply", *model);	
+	pcl::io::loadPCDFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/cube.pcd", *model);
+	
+	Gui1<pcl::PointXYZRGBA, pcl::SHOT352> g1;
+	g1.add(model, "model");
+	
+	while(!g1.wasStopped()){
+		g1.show();
 	}
 }

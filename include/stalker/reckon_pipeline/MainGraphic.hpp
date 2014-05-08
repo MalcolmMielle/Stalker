@@ -30,7 +30,7 @@ class MainGraphic : public Main<T, DescriptorType>{
 		delete gui;}
 	//Accesseur
 	virtual Gui<T, DescriptorType>* getGui(){return gui;}
-	bool stopGui(){return gui->viewer->wasStopped ();}
+	bool stopGui(){return gui->wasStopped ();}
 	//virtual void doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy); 
 	virtual void doWork();
 	//OVERWRITE FUNCTIONS
@@ -70,7 +70,7 @@ void MainGraphic<T, DescriptorType>::doWork()
 		std::cout<<"Getting do Work into the sceneS because we have "<<this->_pipeline->getSizeScenes()<<" scenes" <<std::endl;
 		this->gui->update(*(this->_pipeline->getScene(i)));
 	}
-	
+	//this->_pipeline->affiche();
 	this->gui->printPipeline(*(this->_pipeline));
 	this->gui->show();
 }

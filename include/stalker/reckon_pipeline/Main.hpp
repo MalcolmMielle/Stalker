@@ -123,6 +123,8 @@ class Main{
 	const std::vector<typename pcl::PointCloud<T>::Ptr>& getAllObjects(){return _objects;}
 	const std::vector<typename pcl::PointCloud<T>::Ptr>& getAllScenes(){return _scenes;}
 	
+	virtual void loadModel(const sensor_msgs::PointCloud2ConstPtr& cloudy);
+	virtual void loadModel(const typename pcl::PointCloud<T>::Ptr cloudy);
 	virtual void doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy); 
 	virtual void doWork();
 	
@@ -218,6 +220,22 @@ inline void Main<T, DescriptorType>::clearScenes(){
 	for(typename std::vector<typename pcl::PointCloud<T>::Ptr>::iterator it = _scenes.begin(); it!=_scenes.end();){
 		_scenes.erase(it);
 	}
+}
+
+/**********************LOAD MODEL FUNCTION**************/
+template <typename T, typename DescriptorType>
+inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2ConstPtr& cloudy){
+	pcl::fromROSMsg(*cloudy, *_object);
+	_pipeline->setObject(_object);
+	addObject(_object);
+}
+
+
+template <typename T, typename DescriptorType>
+inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>::Ptr cloudy){
+	_object=cloudy;
+	_pipeline->setObject(_object);
+	addObject(_object);
 }
 
 /**********************DO WORK FUNCTIONS***************/
