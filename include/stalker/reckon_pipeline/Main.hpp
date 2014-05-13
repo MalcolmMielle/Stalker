@@ -1,6 +1,7 @@
 #ifndef RECKON_MAIN_OPEN_H
 #define RECKON_MAIN_OPEN_H
 
+#include <exception>
 #include <iostream>
 #include <stdio.h>
 #include "sensor_msgs/PointCloud2.h"
@@ -9,6 +10,8 @@
 #include <CorrespGrouping.hpp>
 #include <Shape3D.hpp>
 #include "Pipeline.hpp"
+#include <pcl/filters/filter.h>
+#include "Preprocessing.hpp"
 
 
 template <typename T,typename DescriptorType>
@@ -24,6 +27,7 @@ class Main{
 	
 	/*I chose the point cloud because it's easier to have something general of use if we receive a Point Cloud through Ros nodes*/
 	Pipeline<T, DescriptorType>* _pipeline;
+	Preprocessing<T> _prep;
 	
 	public : 
 	
@@ -31,7 +35,7 @@ class Main{
 	Main() : _maxObject(10), _maxScene(20),
 	_scene(new pcl::PointCloud<T>()), 
 	_object(new pcl::PointCloud<T>()), 
-	_pipeline(new CorrespGrouping<T>(new ShapeLocal<T, DescriptorType>("object"), new ShapeLocal<T, DescriptorType>("scene"))) 
+	_pipeline(new CorrespGrouping<T, DescriptorType>(new ShapeLocal<T, DescriptorType>("object"), new ShapeLocal<T, DescriptorType>("scene"))) 
 	{
 		std::cout<<"buiding the main awith nothing"<<std::endl;
 
@@ -41,7 +45,7 @@ class Main{
 	Main(typename pcl::PointCloud<T>::Ptr& object, typename pcl::PointCloud<T>::Ptr& scene) : _maxObject(10), _maxScene(20),
 	_scene(scene), 
 	_object(object), 
-	_pipeline(new CorrespGrouping<T>(new ShapeLocal<T, DescriptorType>("object"), new ShapeLocal<T, DescriptorType>("scene")))
+	_pipeline(new CorrespGrouping<T, DescriptorType>(new ShapeLocal<T, DescriptorType>("object"), new ShapeLocal<T, DescriptorType>("scene")))
 	{
 		std::cout<<"buiding the main"<<std::endl;
 		initPipeline(); //Mem leak
@@ -104,22 +108,23 @@ class Main{
 	typename pcl::PointCloud<T>::Ptr getShape(){return _object;}
 	Pipeline<T, DescriptorType>* getPipeline(){return _pipeline;}
 	
-	void setScene(typename pcl::PointCloud<T>::Ptr& c);
-	void setObject(typename pcl::PointCloud<T>::Ptr& s);
-	void setPipeline(Pipeline<T, DescriptorType>* p){delete _pipeline; _pipeline=p;}
+	virtual void setScene(typename pcl::PointCloud<T>::Ptr& c);
+	virtual void setObject(typename pcl::PointCloud<T>::Ptr& s);
+	virtual void setPipeline(Pipeline<T, DescriptorType>* p){delete _pipeline; _pipeline=p;}
 	
 	//New interface
-	void addObject(typename pcl::PointCloud<T>::Ptr& c){_objects.push_back(c);checkSizeObject();_pipeline->addObject(c);}
-	void addScene(typename pcl::PointCloud<T>::Ptr& c){_scenes.push_back(c);checkSizeScene();_pipeline->addScene(c);
+	virtual void addObject(typename pcl::PointCloud<T>::Ptr& c){_objects.push_back(c);checkSizeObject();_pipeline->addObject(c);}
+	virtual void addScene(typename pcl::PointCloud<T>::Ptr& c){_scenes.push_back(c);checkSizeScene();_pipeline->addScene(c);
 		
 	}
-	void removeObject(typename pcl::PointCloud<T>::Ptr& c);
-	void removeScene(typename pcl::PointCloud<T>::Ptr& c);
-	void removeObject(int i);
-	void removeScene(int i);
 	
-	void clearObjects();
-	void clearScenes();
+	virtual void removeObject(typename pcl::PointCloud<T>::Ptr& c);
+	virtual void removeScene(typename pcl::PointCloud<T>::Ptr& c);
+	virtual void removeObject(int i);
+	virtual void removeScene(int i);
+	
+	virtual void clearObjects();
+	virtual void clearScenes();
 	const std::vector<typename pcl::PointCloud<T>::Ptr>& getAllObjects(){return _objects;}
 	const std::vector<typename pcl::PointCloud<T>::Ptr>& getAllScenes(){return _scenes;}
 	
@@ -226,6 +231,24 @@ inline void Main<T, DescriptorType>::clearScenes(){
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2ConstPtr& cloudy){
 	pcl::fromROSMsg(*cloudy, *_object);
+	//Preprocessing
+	try{
+		_prep.removeNan(_object);
+		_prep.removeNanNormals(_object);
+		
+		if(!_prep.nanTEST(_object)) throw std::invalid_argument("not dense");
+		if(!_prep.infTEST(_object)) throw std::invalid_argument("not dense");
+		
+		if(_object->is_dense==false){
+			throw std::invalid_argument("not dense");
+		}
+		else{std::cout<<"DENSE :D"<<std::endl;}
+	}
+	catch(std::exception const& e){
+		std::cerr << "ERREUR model is not dense : " << e.what() << std::endl;	
+	}
+	
+	
 	_pipeline->setObject(_object);
 	addObject(_object);
 }
@@ -233,7 +256,26 @@ inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2Con
 
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>::Ptr cloudy){
+	
 	_object=cloudy;
+	
+	//PREPROCESSING
+	try{
+		_prep.removeNan(_object);
+		_prep.removeNanNormals(_object);
+		
+		if(!_prep.nanTEST(_object)) throw std::invalid_argument("not dense");
+		if(!_prep.infTEST(_object)) throw std::invalid_argument("not dense");
+		
+		if(_object->is_dense==false){
+			throw std::invalid_argument("not dense");
+		}
+		else{std::cout<<"DENSE :D"<<std::endl;}
+	}
+	catch(std::exception const& e){
+		std::cerr << "ERREUR model is not dense : " << e.what() << std::endl;	
+	}
+	
 	_pipeline->setObject(_object);
 	addObject(_object);
 }
@@ -246,6 +288,29 @@ inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy){
 	pcl::fromROSMsg(*cloudy, *_scene);
+	if(_scene->is_dense==false){
+		std::cout<<"NOT DENNNNNNNSE"<<std::endl;
+	}
+	/****PREPROCESSING****/
+	
+	//Remove NANS
+	try{
+		_prep.removeNan(_scene);
+		_prep.removeNanNormals(_object);
+		
+		if(!_prep.nanTEST(_object)) throw std::invalid_argument("not dense");
+		if(!_prep.infTEST(_object)) throw std::invalid_argument("not dense");
+		
+		if(_object->is_dense==false){
+			throw std::invalid_argument("not dense");
+		}
+		else{std::cout<<"DENSE :D"<<std::endl;}
+	}
+	catch(std::exception const& e){
+		std::cerr << "ERREUR scene is not dense : " << e.what() << std::endl;	
+	}
+	
+	
 	std::cout<<_scene->size() <<std::endl;
 	_pipeline->setScene(_scene);
 	addScene(_scene); //Need to figure out how to change and know the shape's names !! Maybe a yaml file...

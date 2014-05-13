@@ -1,6 +1,9 @@
 #ifndef SHAPE3DLOCAL_MALCOLM_H
 #define SHAPE3DLOCAL_MALCOLM_H
 
+#include <pcl/features/shot_omp.h>
+#include <pcl/features/normal_3d_omp.h>
+#include <pcl/features/spin_image.h>
 #include "Shape3D.hpp"
 //#include "Gui.hpp"
 
@@ -78,6 +81,31 @@ class ShapeLocalBase<T, pcl::SHOT1344> : public Shape<T, pcl::SHOT1344>{
 };
 
 
+template <typename T>
+class ShapeLocalBase<T,  pcl::Histogram<153> > : public Shape<T,  pcl::Histogram<153> >{
+	public :
+		
+	ShapeLocalBase(const std::string& name) : Shape<T, pcl::Histogram<153> >(name){};
+	ShapeLocalBase(const std::string& name, double sampling_size) : Shape<T, pcl::Histogram<153> >(name, sampling_size){};
+	ShapeLocalBase(const std::string& name, double sampling_size, double descriptor_radius) : Shape<T, pcl::Histogram<153> >(name, sampling_size, descriptor_radius){};
+	
+	/***/
+	
+	virtual void computeDescriptors(){
+		// USING THE COLORS
+		std::cout << "Spin Image Descriptors !"<<std::endl;
+		pcl::SpinImageEstimation<T, NormalType, pcl::Histogram<153> > descr_est;
+		descr_est.setRadiusSearch (this->_descrRad);
+		descr_est.setInputCloud (this->_shape_keypoints);
+		descr_est.setInputNormals (this->_shape_normals);
+		descr_est.setSearchSurface (this->_shape);
+		std::cout<<"Computin"<<std::endl;
+		descr_est.compute (*(this->_desc)); //pointer of desc
+	}
+	
+};
+
+
 /***************CLASS FINAL**********/
 
 template <typename T, typename DescriptorType>
@@ -113,6 +141,10 @@ class ShapeLocal : public ShapeLocalBase<T, DescriptorType> {
 	
 	virtual void printupdate(Gui<T, DescriptorType>& gui){
 		gui.update(*this);
+	}
+
+	virtual void remove(Gui<T, DescriptorType>& gui){
+		gui.remove(*this);
 	}
 
 	
@@ -156,8 +188,23 @@ inline void ShapeLocal<T, DescriptorType>::estimNormal(){
 	
 	pcl::NormalEstimationOMP<T, NormalType> norm_est2;
 	norm_est2.setKSearch (_k);
+	std::cout<<"Input cloud given"<<std::endl;
 	norm_est2.setInputCloud (this->_shape);
-	norm_est2.compute (*(this->_shape_normals));
+	std::cout<<"compte the normals"<<std::endl;
+	try{
+		if(this->_shape->is_dense==true){
+			std::cout<<"Yay dense :D"<<std::endl;
+			norm_est2.compute (*(this->_shape_normals));
+		}
+		else{
+			throw std::invalid_argument("not dense");
+		}
+	}
+	catch(std::exception const& e){
+		std::cerr << "ERREUR SHAPE is not dense :( : " << e.what() << std::endl;
+		exit(0);
+	}
+		
 
 }
 

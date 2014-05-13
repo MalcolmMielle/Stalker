@@ -33,7 +33,8 @@ class MainGraphic : public Main<T, DescriptorType>{
 	bool stopGui(){return gui->wasStopped ();}
 	//virtual void doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy); 
 	virtual void doWork();
-	//OVERWRITE FUNCTIONS
+	
+	//OVERWRITED FUNCTIONS
 	
 	void addObject(typename pcl::PointCloud<T>::Ptr& c){
 		this->_objects.push_back(c);
@@ -49,16 +50,32 @@ class MainGraphic : public Main<T, DescriptorType>{
 		gui->add(*(this->_pipeline->getScene( (this->_pipeline->getSizeScenes())-1) ) );
 	}
 	
+	virtual void setScene(typename pcl::PointCloud<T>::Ptr& c);
+	virtual void setObject(typename pcl::PointCloud<T>::Ptr& s);
+	
+	virtual void loadModel(const sensor_msgs::PointCloud2ConstPtr& cloudy){Main<T, DescriptorType>::loadModel(cloudy);}
+	virtual void loadModel(const typename pcl::PointCloud<T>::Ptr cloudy){Main<T, DescriptorType>::loadModel(cloudy);}
+	virtual void doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy){Main<T, DescriptorType>::doWork(cloudy);}
+	
 };
 
-/*void MainGraphic::doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy)
-{
-	Main::doWork(cloudy);
-}*/
+
+
+template <typename T, typename DescriptorType>
+inline void MainGraphic<T, DescriptorType>::setScene(typename pcl::PointCloud<T>::Ptr& c){
+	Main<T, DescriptorType>::setScene(c);
+	this->gui->update(*(this->_pipeline->getScene() ));
+}
+template <typename T, typename DescriptorType>
+inline void MainGraphic<T, DescriptorType>::setObject(typename pcl::PointCloud<T>::Ptr& s){
+	Main<T, DescriptorType>::setObject(s);
+	this->gui->update(*(this->_pipeline->getObject() ));
+}
+
 template < typename T, typename DescriptorType>
 void MainGraphic<T, DescriptorType>::doWork()
 {
-	//Main<T, DescriptorType>::doWork();
+	Main<T, DescriptorType>::doWork();
 	this->gui->update(*(this->_pipeline->getObject() ));
 	this->gui->update(*(this->_pipeline->getScene() ));
 	

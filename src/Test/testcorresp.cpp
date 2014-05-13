@@ -413,7 +413,7 @@ main (int argc, char *argv[])
   object->setNormals(model_normals2);
   scenery->setNormals(scene_normals2);*/
   
-  CorrespGrouping<PointType> cp(object, scenery);
+  CorrespGrouping<PointType, DescriptorType> cp(object, scenery);
   std::cout<<"inc class version***********************"<<std::endl;
  
   cp.printinfo();
@@ -450,7 +450,7 @@ main (int argc, char *argv[])
   scenery2->update(scene3);
 
   
-  CorrespGrouping<PointType> cp2(object2, scenery2);
+  CorrespGrouping<PointType, DescriptorType> cp2(object2, scenery2);
   
   cp2.doPipeline();
   cp2.affiche();

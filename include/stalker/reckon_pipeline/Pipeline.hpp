@@ -2,7 +2,7 @@
 #define PIPELINE_RECKON_H
 
 //Testing Malcolm
-
+#include <exception>
 #include "Shape3D.hpp"
 #include "Shape3DLocal.hpp"
 #include "Gui.hpp"
@@ -35,9 +35,33 @@ class Pipeline{
 		clearScenes();
 		
 	}
+	
 	virtual void doPipeline() = 0;
-	virtual void setMaxObject(int i){_maxObject=i;}
-	virtual void setMaxScene(int i){_maxScene=i;}
+	
+	virtual void setMaxObject(int i){
+		try{
+			if(i<0)
+				throw std::invalid_argument("Number is under 0. You need to be at least 1");
+			else
+				_maxObject=i;
+		}
+		catch(std::exception const& e){
+			std::cerr << "ERREUR in setting the number of object : " << e.what() << std::endl;	
+		}
+	}
+	
+	virtual void setMaxScene(int i){
+		try{
+			if(i<0)
+				throw std::invalid_argument("Number is under 0. You need to be at least 1");
+			else
+				_maxScene=i;
+		}
+		catch(std::exception const& e){
+			std::cerr << "ERREUR in setting the number of scene : " << e.what() << std::endl;	
+		}		
+		
+	}
 	
 	virtual void checkSizeObject();
 	virtual void checkSizeScene();
@@ -56,8 +80,8 @@ class Pipeline{
 	virtual const std::vector<Shape<PointType, DescriptorType> *>& getAllScenes(){return _scenes;}
 	virtual int getSizeObjects(){ return _objects.size();}
 	virtual int getSizeScenes(){ return _scenes.size();}
-	virtual Shape<PointType, DescriptorType>* getObject(int i){return _objects[i];}
-	virtual Shape<PointType, DescriptorType>* getScene(int i){return _scenes[i];}
+	virtual Shape<PointType, DescriptorType>* getObject(int i){return _objects.at(i);}
+	virtual Shape<PointType, DescriptorType>* getScene(int i){return _scenes.at(i);}
 	
 	virtual void addObject(Shape<PointType, DescriptorType>* o);
 	virtual void addScene(Shape<PointType, DescriptorType>* o);
@@ -92,6 +116,7 @@ class Pipeline{
 	};
 	
 	virtual void affiche(){std::cout << "I souldn't exist cause 'm a pipeline with no meaning ;)"<<std::endl;}
+	
 	virtual void print(Gui<PointType, DescriptorType>* g){
 		g->printPipeline((*this));
 	}

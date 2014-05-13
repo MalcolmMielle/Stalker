@@ -2,7 +2,7 @@
 #define SHAPE3D_MALCOLM_H
 
 //Hello Albert
-
+#include <exception>
 #include <iostream>
 #include <stdio.h>
 #include <vector>
@@ -12,12 +12,11 @@
 #include <pcl/ros/conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/features/shot_omp.h>
-#include <pcl/features/normal_3d_omp.h>
+
 #include <pcl/keypoints/uniform_sampling.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/io/pcd_io.h>
-
+#include <exception>
 #include "Gui.hpp"
 
 //#define DescriptorType pcl::SHOT352
@@ -76,12 +75,20 @@ class Shape{
 	//Print interface
 	virtual void addPrint(Gui<T, DescriptorType>& gui)=0;
 	virtual void printupdate(Gui<T, DescriptorType>& gui)=0;
+	virtual void remove(Gui<T, DescriptorType>& gui)=0;
 };
 
 template <typename T, typename DescriptorType>
 inline void Shape<T, DescriptorType>::addPrint(Gui<T, DescriptorType>& gui){
 		std::cout<<"Je suis une shape"<<std::endl;
-		gui.add(*this);
+	
+		try{
+			throw std::invalid_argument("you can't use a shape because it's abstract");
+
+		}
+		catch(std::exception const& e){
+			std::cerr << "you can't use a shape in the GUI because it's abstract : " << e.what() << std::endl;	
+		}
 }
 
 template <typename T, typename DescriptorType>

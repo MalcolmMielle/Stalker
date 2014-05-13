@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	pcl::io::loadPCDFile ("/home/ros/groovy_ws/catkin_ws/src/Tobot/stalker/src/Test/milk.pcd", *cloud);
 	pcl::io::loadPCDFile ("/home/ros/groovy_ws/catkin_ws/src/Tobot/stalker/src/Test/milk.pcd", *cloud2);
 
-	CorrespGrouping<pcl::PointXYZRGBA>* p = new CorrespGrouping<pcl::PointXYZRGBA>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene"));
+	CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352>* p = new CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene"));
 	
 	Main<pcl::PointXYZRGBA, pcl::SHOT352> mg(cloud, cloud2);//Mem lek
 	
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	mg2.setObject(cloud);
 	mg2.doWork();
 	
-	Main<pcl::PointXYZRGBA, pcl::SHOT352> mg3(cloud, cloud, new CorrespGrouping<pcl::PointXYZRGBA>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene")));
+	Main<pcl::PointXYZRGBA, pcl::SHOT352> mg3(cloud, cloud, new CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene")));
 	mg3.doWork();
 	
 	///////////////////////////////////////////////
@@ -78,6 +78,6 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	
 	/////////////////////////////
-	CorrespGrouping<pcl::PointXYZRGBA>* cp=new CorrespGrouping<pcl::PointXYZRGBA>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("1"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("2"));
+	CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352>* cp=new CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("1"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("2"));
  	Main<pcl::PointXYZRGBA, pcl::SHOT352> meanie(cp);
 };

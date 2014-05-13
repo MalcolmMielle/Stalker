@@ -16,9 +16,10 @@ BOOST_AUTO_TEST_CASE(trying)
 	pcl::io::loadPCDFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk.pcd", *cloud);	
 	
 	
-	CorrespGrouping<pcl::PointXYZRGBA> cg(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob2"));
+	CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352> cg(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob2"));
 	cg.setMaxObject(2);
 	cg.setMaxScene(4);
+	cg.setMaxScene(-5);
 	//cg.addObject(new ShapeLocal<pcl::PointXYZRGBA>("bob2")); //Problem with this declaration oO
 	//BOOST_CHECK_EQUAL(cg.getAllObjects().size(),1);
 	

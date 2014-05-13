@@ -1,7 +1,7 @@
 #ifndef CORRESGROUP_RECKON_H
 #define CORRESGROUP_RECKON_H
 
-#include "Pipeline.hpp"
+#include "CorrespGroupingBase.hpp"
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/correspondence.h>
@@ -12,13 +12,13 @@
 #include <pcl/recognition/cg/geometric_consistency.h>
 
 
-template <typename T>
-class CorrespGrouping : public Pipeline<T, pcl::SHOT352> {
+template <typename T, typename DescriptorTypes>
+class CorrespGrouping : public CorrespGroupingBase<T, DescriptorTypes> {
 	protected: 
 	//ShapeLocal<T, pcl::SHOT352>* _object; //Don't need because it take a Shape* from main.
 	//ShapeLocal<T, pcl::SHOT352>* _scene; // Need to be initialise because it takes a Cloud in argument.
 	bool resol;
-	pcl::CorrespondencesPtr _model_scene_corrs ;
+	
 	double _rf_rad; //Referance frame radius default 0.015
 	double _cg_size; //Cluster size default 0.01
 	double _cg_thresh; //Cluster thressold default 5
@@ -27,7 +27,7 @@ class CorrespGrouping : public Pipeline<T, pcl::SHOT352> {
 	
 	public : 
 		
-	CorrespGrouping(ShapeLocal<T, pcl::SHOT352>* object, ShapeLocal<T, pcl::SHOT352>* scene) : Pipeline<T, pcl::SHOT352>(object, scene),/* _object(object), _scene(scene),*/resol(false), _model_scene_corrs(new pcl::Correspondences ()), _rf_rad(0.015), _cg_size(0.01), _cg_thresh(5.0) {};
+	CorrespGrouping(ShapeLocal<T, DescriptorTypes>* object, ShapeLocal<T, DescriptorTypes>* scene) : CorrespGroupingBase<T, DescriptorTypes>(object, scene),/* _object(object), _scene(scene),*/resol(false), _rf_rad(0.015), _cg_size(0.01), _cg_thresh(5.0) {};
 	
 	virtual void doPipeline();
 	//virtual void doPipelineOld();
@@ -45,7 +45,7 @@ class CorrespGrouping : public Pipeline<T, pcl::SHOT352> {
 	std::vector<pcl::Correspondences>& getClust(){return _clustered_corrs;}
 	
 	
-	virtual void point2PointCorrespondance();
+	
 	virtual void clusteringHough();
 	virtual void resolutionInvariance();
 	//virtual void estimNormal();
@@ -60,7 +60,7 @@ class CorrespGrouping : public Pipeline<T, pcl::SHOT352> {
 	}
 	
 	//OVERWRITTEN FUNTION
-	virtual void print(Gui<T,pcl::SHOT352>* g){
+	virtual void print(Gui<T,DescriptorTypes>* g){
 		g->printPipeline((*this));
 	}
 	
@@ -93,54 +93,21 @@ inline void CorrespGrouping<T>::doPipelineOld()
 	
 }*/
 
-template <typename T>
-inline void CorrespGrouping<T>::doPipeline()
+template <typename T, typename DescriptorTypes>
+inline void CorrespGrouping<T, DescriptorTypes>::doPipeline()
 {
 	std::cout<<"ENTER THE PIPELINE ************************************"<<std::endl;
 	if(resol==true){
 		std::cout << "Rosulation"<<std::endl;
 		resolutionInvariance();
 	}
-	point2PointCorrespondance();
+	this->point2PointCorrespondance();
 	clusteringHough();
 }
 
 
-/*****FUNCTION IS OK ERROR COME FROM BEFORE ********/
-template <typename T>
-inline void CorrespGrouping<T>::point2PointCorrespondance(){
-	
-	pcl::KdTreeFLANN<pcl::SHOT352> match_search;
-	
-	match_search.setInputCloud (this->_object->getDescr());
-	std::cout << "Scene descirptor size "<< this->_scene->getDescr()->size()<<" object descr size "<< this->_object->getDescr()->size()<< std::endl;
-	int kop=0;
-	//  For each scene keypoint descriptor, find nearest neighbor into the model keypoints descriptor cloud and add it to the correspondences vector.
-	for (size_t i = 0; i < this->_scene->getDescr()->size(); ++i){
-		std::vector<int> neigh_indices(1);
-		std::vector<float> neigh_sqr_dists(1);
-		//skipping NaNs
-		if (!pcl_isfinite (this->_scene->getDescr()->at (i).descriptor[0])) {
-			continue;
-		}
-
-		int found_neighs = match_search.nearestKSearch (this->_scene->getDescr()->at(i), 1, neigh_indices, neigh_sqr_dists);
-
-		//  add match only if the squared descriptor distance is less than 0.25 (SHOT descriptor distances are between 0 and 1 by design)
-		if(found_neighs == 1 && neigh_sqr_dists[0] < 0.25f) {
-			pcl::Correspondence corr (neigh_indices[0], static_cast<int> (i), neigh_sqr_dists[0]);
-			_model_scene_corrs->push_back (corr);
-			kop++;
-		}
-		
-	}
-	std::cout<<"number of entries "<<kop<<std::endl;
-	std::cout << "Correspondences found: " << _model_scene_corrs->size() << std::endl;
-}
-
-
-template <typename T>
-inline void CorrespGrouping<T>::clusteringHough(){
+template <typename T, typename DescriptorTypes>
+inline void CorrespGrouping<T, DescriptorTypes>::clusteringHough(){
 	    //
 	//  Compute (Keypoints) Reference Frames only for Hough
 	
@@ -162,18 +129,6 @@ inline void CorrespGrouping<T>::clusteringHough(){
 	rf_est.setInputNormals (this->_scene->getNormals());
 	rf_est.setSearchSurface (this->_scene->getCloud());
 	rf_est.compute (*scene_rf); 
-	
-	/*In PCL 1.6
-	pcl::SHOTLocalReferenceFrameEstimation<T, RFType> rf_est;
-	rf_est.setRadiusSearch (_rf_rad);
-
-	rf_est.setInputCloud (this->_object->getKeypoints());
-	rf_est.setSearchSurface (this->_object->getCloud());
-	rf_est.compute (*model_rf);
-
-	rf_est.setInputCloud (this->_scene->getKeypoints());
-	rf_est.setSearchSurface (this->_scene->getCloud());
-	rf_est.compute (*scene_rf);*/
 
 	//  Clustering
 	pcl::Hough3DGrouping<T, T, RFType, RFType> clusterer; //undefined reference in .o
@@ -186,7 +141,7 @@ inline void CorrespGrouping<T>::clusteringHough(){
 	clusterer.setInputRf (model_rf);
 	clusterer.setSceneCloud (this->_scene->getKeypoints());
 	clusterer.setSceneRf (scene_rf);
-	clusterer.setModelSceneCorrespondences (_model_scene_corrs);
+	clusterer.setModelSceneCorrespondences (this->_model_scene_corrs);
 
 	//clusterer.cluster (clustered_corrs);
 	clusterer.recognize (_rototranslations, _clustered_corrs);
@@ -197,7 +152,7 @@ inline void CorrespGrouping<T>::clusteringHough(){
 
 	gc_clusterer.setInputCloud (this->_object->getKeypoints());
 	gc_clusterer.setSceneCloud (this->_scene->getKeypoints());
-	gc_clusterer.setModelSceneCorrespondences (_model_scene_corrs);
+	gc_clusterer.setModelSceneCorrespondences (this->_model_scene_corrs);
 
 	//gc_clusterer.cluster (clustered_corrs);
 	gc_clusterer.recognize (_rototranslations, _clustered_corrs);*/
@@ -206,8 +161,8 @@ inline void CorrespGrouping<T>::clusteringHough(){
 
 
 
-template <typename T>
-inline void CorrespGrouping<T>::resolutionInvariance(){
+template <typename T, typename DescriptorTypes>
+inline void CorrespGrouping<T, DescriptorTypes>::resolutionInvariance(){
 
 	float resolution = 0;//static_cast<float> (computeCloudResolution (this->_shape));
 	//ATTENTION CHECK QUE CA A ETE FAIT CHEZ SHAPE !!!
@@ -244,8 +199,8 @@ inline void CorrespGrouping<PointType>::estimNormal()
 }*/
 
 
-template <typename T>
-inline void CorrespGrouping<T>::affiche()
+template <typename T, typename DescriptorTypes>
+inline void CorrespGrouping<T, DescriptorTypes>::affiche()
 {
 	std::cout << "Model instances found: " << _rototranslations.size () << std::endl;
 	for (size_t i = 0; i < _rototranslations.size (); ++i)

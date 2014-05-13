@@ -110,8 +110,10 @@ include_directories(
 find_package(VTK REQUIRED)
 include( ${VTK_USE_FILE} )
 
-find_package(PCL REQUIRED)
+find_package(PCL 1.7.2 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 ## Declare a cpp library
 # add_library(stalker
 #   src/${PROJECT_NAME}/stalker.cpp
@@ -165,6 +167,9 @@ target_link_libraries(tgui1 ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_te
 
 add_executable(stalker_node src/Stalker.cpp)
 target_link_libraries(stalker_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+
+add_executable(sendimg src/Test/sendimg.cpp)
+target_link_libraries(sendimg ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

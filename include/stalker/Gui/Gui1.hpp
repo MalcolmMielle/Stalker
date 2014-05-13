@@ -15,54 +15,35 @@ class Gui1 : public Gui<T, DescriptorType>{
 	Gui1() : 
 	Gui<T, DescriptorType>(), 
 	scene_keypoints_color_handler(typename pcl::PointCloud<T>::Ptr(new pcl::PointCloud<T>()), 0, 0, 255){}
-		
-		
-	virtual void add(typename pcl::PointCloud<T>::Ptr cloud, std::string name){
-		std::cout<<"Adding Point Cloud"<<std::endl;
-		this->viewer->template addPointCloud<T> (cloud, name);
-		this->viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, name);
-	}		
 	
-	virtual void update(typename pcl::PointCloud<T>::Ptr cloud, std::string name){
-		this->viewer->updatePointCloud(cloud, name);
-	}
-	
-	virtual void add(Shape<T, DescriptorType>& sh){
-		std::cout<<"Adding shape"<<std::endl;
-		sh.addPrint(*this);
-	}
-	
-	virtual void update(Shape<T, DescriptorType>& sh){
-		std::cout<<"Adding shape"<<std::endl;
-		sh.printupdate(*this);
-	}
 	
 	virtual void update(ShapeLocal<T, DescriptorType>& sh){
-		update(sh.getCloud(), sh.getName());
+		Gui<T, DescriptorType>::updatePCL(sh.getCloud(), sh.getName());
 		std::string name=sh.getName()+"keypoints";
-		update(sh.getKeypoints(), name);
+		Gui<T, DescriptorType>::updatePCL(sh.getKeypoints(), name);
 	}
 	
 	virtual void add(ShapeLocal<T, DescriptorType>& sh){
-		//sh->addPrint(this);
-		std::cout<<"Adding shape Local "<< sh.getName()<<std::endl;
-		this->add(sh.getCloud(), sh.getName());
+//		std::cout<<"Adding shape Local "<< sh.getName()<<std::endl;
+		Gui<T, DescriptorType>::addPCL(sh.getCloud(), sh.getName());
 		printKeyPoints(sh);
 	}
 	
-	virtual void printPipeline(Pipeline<T, DescriptorType>& p){
-		p.print(this);
+	virtual void remove(ShapeLocal<T, DescriptorType>& sh){
+		Gui<T, DescriptorType>::removePCL(sh.getName());
+		std::string name=sh.getName()+"keypoints";
+		Gui<T, DescriptorType>::removePCL(name);
 	}
 	
 	virtual void printKeyPoints(ShapeLocal<T, DescriptorType>& sh){
-		std::cout<<"Adding kaypoints"<<std::endl;
+//		std::cout<<"Adding kaypoints"<<std::endl;
 		std::string name=sh.getName()+"keypoints";
 		scene_keypoints_color_handler = pcl::visualization::PointCloudColorHandlerCustom<T> (sh.getKeypoints(), 0, 0, 255);
 		this->viewer->template addPointCloud<T>(sh.getKeypoints(), scene_keypoints_color_handler, name);
 		this->viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, name);
 	}
 	
-	virtual void printPipeline(CorrespGrouping<T>& sh){
+	virtual void printPipeline(CorrespGrouping<T, DescriptorType>& sh){
 		
 		typename pcl::PointCloud<T>::Ptr off_scene_model_keypoints (new pcl::PointCloud<T> ());
 

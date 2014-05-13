@@ -10,7 +10,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include "CorrespGrouping.hpp"
-#include "Main.hpp"
+#include "MainGraphic.hpp"
 int main (int argc, char **argv){
 	ros::init(argc, argv, "Stalker");
 	ros::NodeHandle my_node;
@@ -26,7 +26,7 @@ int main (int argc, char **argv){
 	ros::Publisher newBB_pub;
 	
 	std::string model="/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk.pcd";
-	Main<pcl::PointXYZRGBA, pcl::SHOT352> main;
+	MainGraphic<pcl::PointXYZRGBA, pcl::SHOT352> main;
 	
 	/*******PARAMETERS****************/
 	
@@ -37,7 +37,7 @@ int main (int argc, char **argv){
 	
 	/***********MODEL****************/
 	if(path2model.compare("none")==0){
-		model_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("model", 1, &Main<pcl::PointXYZRGBA, pcl::SHOT352>::loadModel, &main);
+		model_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("model", 1, &MainGraphic<pcl::PointXYZRGBA, pcl::SHOT352>::loadModel, &main);
 	}
 	else{
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr model_pc (new pcl::PointCloud<pcl::PointXYZRGBA>);
@@ -45,7 +45,7 @@ int main (int argc, char **argv){
 	}
 	
 	/***********CAMERA IMAGE*********/
-	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, &Main<pcl::PointXYZRGBA, pcl::SHOT352>::doWork, &main);
+	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, &MainGraphic<pcl::PointXYZRGBA, pcl::SHOT352>::doWork, &main);
 
 
 	while(ros::ok()){
