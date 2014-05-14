@@ -236,8 +236,8 @@ inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2Con
 		_prep.removeNan(_object);
 		_prep.removeNanNormals(_object);
 		
-		if(!_prep.nanTEST(_object)) throw std::invalid_argument("not dense");
-		if(!_prep.infTEST(_object)) throw std::invalid_argument("not dense");
+		if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense");
+		if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense");
 		
 		if(_object->is_dense==false){
 			throw std::invalid_argument("not dense");
@@ -264,8 +264,8 @@ inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>
 		_prep.removeNan(_object);
 		_prep.removeNanNormals(_object);
 		
-		if(!_prep.nanTEST(_object)) throw std::invalid_argument("not dense");
-		if(!_prep.infTEST(_object)) throw std::invalid_argument("not dense");
+		if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense");
+		if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense");
 		
 		if(_object->is_dense==false){
 			throw std::invalid_argument("not dense");
@@ -298,8 +298,8 @@ inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstP
 		_prep.removeNan(_scene);
 		_prep.removeNanNormals(_object);
 		
-		if(!_prep.nanTEST(_object)) throw std::invalid_argument("not dense");
-		if(!_prep.infTEST(_object)) throw std::invalid_argument("not dense");
+		if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense");
+		if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense");
 		
 		if(_object->is_dense==false){
 			throw std::invalid_argument("not dense");
