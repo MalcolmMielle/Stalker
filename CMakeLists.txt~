@@ -110,7 +110,7 @@ include_directories(
 find_package(VTK REQUIRED)
 include( ${VTK_USE_FILE} )
 
-find_package(PCL 1.7.1 REQUIRED)
+find_package(PCL 1.7.0 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 #link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
@@ -172,7 +172,7 @@ add_executable(sendimg src/Test/sendimg.cpp)
 target_link_libraries(sendimg ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
 add_executable(preprotest src/Test/preprotest.cpp)
-target_link_libraries(preprotest ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+target_link_libraries(preprotest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework )
 
 #add_executable(testnormalnan src/Test/testnormalnan.cpp)
 #target_link_libraries(testnormalnan ${catkin_LIBRARIES} ${PCL_LIBRARIES})

@@ -233,14 +233,18 @@ inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2Con
 	pcl::fromROSMsg(*cloudy, *_object);
 	//Preprocessing
 	try{
-		_prep.removeNan(_object);
-		_prep.removeNanNormals(_object);
-		
-		if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense");
-		if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense");
-		
-		if(_object->is_dense==false){
-			throw std::invalid_argument("not dense");
+		bool nany= _prep.gotnanTEST(_object);
+		if(nany==true || _object->is_dense==false){
+			_object->is_dense=false;
+			_prep.removeNan(_object);
+			_prep.removeNanNormals(_object);
+			
+			std::cout<<"remove dense from model"<<std::endl;
+			
+			if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense : nan");
+			if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense : inf");
+			
+			_object->is_dense=true;
 		}
 		else{std::cout<<"DENSE :D"<<std::endl;}
 	}
@@ -248,8 +252,9 @@ inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2Con
 		std::cerr << "ERREUR model is not dense : " << e.what() << std::endl;	
 	}
 	
-	
+	std::cout<<"setObject"<<std::endl;
 	_pipeline->setObject(_object);
+	std::cout<<"addObject"<<std::endl;
 	addObject(_object);
 }
 
@@ -261,14 +266,20 @@ inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>
 	
 	//PREPROCESSING
 	try{
-		_prep.removeNan(_object);
-		_prep.removeNanNormals(_object);
+		//TOO CHANGE !!
+		bool nany= _prep.gotnanTEST(_object);
 		
-		if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense");
-		if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense");
-		
-		if(_object->is_dense==false){
-			throw std::invalid_argument("not dense");
+		if(nany==true || _object->is_dense==false){
+			_object->is_dense=false;
+			_prep.removeNan(_object);
+			_prep.removeNanNormals(_object);
+			
+			std::cout<<"remove dense from model"<<std::endl;
+			
+			if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense : nan");
+			if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense : inf");
+			
+			_object->is_dense=true;
 		}
 		else{std::cout<<"DENSE :D"<<std::endl;}
 	}
@@ -295,14 +306,18 @@ inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstP
 	
 	//Remove NANS
 	try{
-		_prep.removeNan(_scene);
-		_prep.removeNanNormals(_object);
-		
-		if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense");
-		if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense");
-		
-		if(_object->is_dense==false){
-			throw std::invalid_argument("not dense");
+		bool nany= _prep.gotnanTEST(_scene);
+		if(nany==true || _scene->is_dense==false){
+			_scene->is_dense=false;
+			_prep.removeNan(_scene);
+			_prep.removeNanNormals(_scene);
+			
+			std::cout<<"remove dense from scene"<<std::endl;
+			
+			if(_prep.gotnanTEST(_scene)) throw std::invalid_argument("not dense : nan");
+			if(_prep.gotinfTEST(_scene)) throw std::invalid_argument("not dense : inf");
+			
+			_scene->is_dense=true;
 		}
 		else{std::cout<<"DENSE :D"<<std::endl;}
 	}
@@ -325,6 +340,9 @@ inline void Main<T, DescriptorType>::doWork(){
 	/**************************MAIN PIPELINE OF RECOGNITION**********************/
 	
 	_pipeline->doPipeline();
+	_pipeline->affiche();
+	
+	exit(0);
 	
 	//TODO Post Processing here
 

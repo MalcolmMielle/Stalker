@@ -14,6 +14,8 @@ void makeModel(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Publisher& m
 	std::cout<<"HEllow"<<std::endl;
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZRGBA>);
+	cloud->is_dense=false;
+	cloud_filtered->is_dense=false;
 	pcl::fromROSMsg(*cloudy, *cloud);
 	
 	std::cout << "TAILLE DE "<< cloud->width<<" "<<cloud->height<<std::endl;

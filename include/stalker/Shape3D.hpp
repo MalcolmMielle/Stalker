@@ -59,8 +59,8 @@ class Shape{
 	virtual const std::string& getName(){return _id;}
 	
 	virtual void set(typename pcl::PointCloud<T>::Ptr& p){_shape=p;}
-	virtual void setRadius(float r){_descrRad=r;}
-	virtual void setSamplingSize(float r){_shape_ss=r;}
+	virtual void setRadius(double r){_descrRad=r;}
+	virtual void setSamplingSize(double r){_shape_ss=r;}
 	virtual void setDescriptors(typename pcl::PointCloud<DescriptorType>::Ptr& desc){_desc=desc;}
 	virtual void setNormals(pcl::PointCloud<NormalType>::Ptr& normal){_shape_normals=normal;}
 	//update Shape state
@@ -69,7 +69,7 @@ class Shape{
 
 	//Load a model
 	virtual void update(typename pcl::PointCloud<T>::Ptr& p);
-	virtual bool loadMesh(std::string path);
+	virtual bool loadMesh(std::string& path);
 	virtual bool saveMesh();
 	
 	//Print interface

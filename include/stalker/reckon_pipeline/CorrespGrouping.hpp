@@ -34,13 +34,13 @@ class CorrespGrouping : public CorrespGroupingBase<T, DescriptorTypes> {
 	
 	//new stuff
 	virtual void setResol(bool y){resol=y;}
-	virtual void setFrameRadius(int rf){_rf_rad=rf;}
-	virtual void setClusterSize(int rf){_cg_size=rf;}
-	virtual void setClusterThresold(int rf){_cg_thresh=rf;}
+	virtual void setFrameRadius(double rf){_rf_rad=rf;}
+	virtual void setClusterSize(double rf){_cg_size=rf;}
+	virtual void setClusterThresold(double rf){_cg_thresh=rf;}
 	
-	virtual int getFrameRadius(){return _rf_rad;}
-	virtual int getClusterSize(){return _cg_size;}
-	virtual int getClusterThresold(){return _cg_thresh;}
+	virtual double getFrameRadius(){return _rf_rad;}
+	virtual double getClusterSize(){return _cg_size;}
+	virtual double getClusterThresold(){return _cg_thresh;}
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >& getRoto(){return _rototranslations;}
 	std::vector<pcl::Correspondences>& getClust(){return _clustered_corrs;}
 	
