@@ -168,11 +168,23 @@ target_link_libraries(tgui1 ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_te
 add_executable(stalker_node src/Stalker.cpp)
 target_link_libraries(stalker_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
+add_executable(stalker_node_nogui src/StalkerNonGraphic.cpp)
+target_link_libraries(stalker_node_nogui ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+
 add_executable(sendimg src/Test/sendimg.cpp)
 target_link_libraries(sendimg ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
 add_executable(preprotest src/Test/preprotest.cpp)
 target_link_libraries(preprotest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework )
+
+add_executable(sharedp src/Test/sharp.cpp)
+target_link_libraries(sharedp ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework )
+
+add_executable(prep_node src/Test/preprocess_node.cpp)
+target_link_libraries(prep_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+
+add_executable(shape_node src/Test/shape_node.cpp)
+target_link_libraries(shape_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
 #add_executable(testnormalnan src/Test/testnormalnan.cpp)
 #target_link_libraries(testnormalnan ${catkin_LIBRARIES} ${PCL_LIBRARIES})

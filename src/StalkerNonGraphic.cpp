@@ -12,10 +12,11 @@
 #include "CorrespGrouping.hpp"
 #include "MainGraphic.hpp"
 
+
 #define Descriptor pcl::SHOT1344
 
 int main (int argc, char **argv){
-	ros::init(argc, argv, "Stalker");
+	ros::init(argc, argv, "Stalker_NoGui");
 	ros::NodeHandle my_node;
 	ros::NodeHandle priv_node("~");
 
@@ -29,7 +30,7 @@ int main (int argc, char **argv){
 	ros::Publisher newBB_pub;
 	
 	std::string model="/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk.pcd";
-	MainGraphic<pcl::PointXYZRGBA, Descriptor> main;
+	Main<pcl::PointXYZRGBA, Descriptor> main;
 	
 	CorrespGrouping<pcl::PointXYZRGBA, Descriptor>* cp= new CorrespGrouping<pcl::PointXYZRGBA, Descriptor>(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("object"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("scene", 0.03));
 	
@@ -45,7 +46,7 @@ int main (int argc, char **argv){
 	
 	/***********MODEL****************/
 	if(path2model.compare("none")==0){
-		model_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("model", 1, &MainGraphic<pcl::PointXYZRGBA, Descriptor>::loadModel, &main);
+		model_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("model", 1, &Main<pcl::PointXYZRGBA, Descriptor>::loadModel, &main);
 	}
 	else{
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr model_pc (new pcl::PointCloud<pcl::PointXYZRGBA>);
@@ -53,7 +54,7 @@ int main (int argc, char **argv){
 	}
 	
 	/***********CAMERA IMAGE*********/
-	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, &MainGraphic<pcl::PointXYZRGBA, Descriptor>::doWork, &main);
+	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, &Main<pcl::PointXYZRGBA, Descriptor>::doWork, &main);
 
 
 	while(ros::ok()){

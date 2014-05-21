@@ -10,8 +10,7 @@
 BOOST_AUTO_TEST_CASE(trying)
 {
 	
-	Preprocessing<pcl::PointXYZ> p;
-	Preprocessing<pcl::PointXYZ> p2;
+	
 	//EXAMPLE
 	typedef pcl::PointCloud<pcl::PointXYZ> CloudType;
 	CloudType::Ptr cloudt (new CloudType);
@@ -28,7 +27,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	p_valid.x = 1.0f;
 	cloudt->push_back(p_valid);
 	
-	BOOST_CHECK_EQUAL(p2.gotnanTEST(cloudt),1);
+	BOOST_CHECK_EQUAL(stalker::gotnanTEST<pcl::PointXYZ>(*cloudt),1);
 
 	std::cout << "size: " << cloudt->points.size () << std::endl;
 
@@ -36,7 +35,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	pcl::removeNaNFromPointCloud(*cloudt, *cloudt, indicest);
 	std::cout << "size: " << cloudt->points.size () << std::endl;
 	
-	BOOST_CHECK_EQUAL(p2.gotnanTEST(cloudt),0);
+	BOOST_CHECK_EQUAL(stalker::gotnanTEST<pcl::PointXYZ>(*cloudt),0);
 	
 	std::cout<<std::endl<<std::endl<<"END OF TEST."<<std::endl;
 	
@@ -65,13 +64,13 @@ BOOST_AUTO_TEST_CASE(trying)
 	}
 	
 	
-	BOOST_CHECK_EQUAL(p.gotnanTEST(cloud),1);
-	BOOST_CHECK_EQUAL(p.gotinfTEST(cloud),0);
+	BOOST_CHECK_EQUAL(stalker::gotnanTEST<pcl::PointXYZ>(*cloud),1);
+	BOOST_CHECK_EQUAL(stalker::gotinfTEST<pcl::PointXYZ>(*cloud),0);
 	
-	p.removeNan(cloud);
+	stalker::removeNan(*cloud, *cloud);
 
-	BOOST_CHECK_EQUAL(p.gotnanTEST(cloud),0);
-	BOOST_CHECK_EQUAL(p.gotinfTEST(cloud),0);
+	BOOST_CHECK_EQUAL(stalker::gotnanTEST<pcl::PointXYZ>(*cloud),0);
+	BOOST_CHECK_EQUAL(stalker::gotinfTEST<pcl::PointXYZ>(*cloud),0);
 	
 	std::vector<int> indices;
 	pcl::removeNaNFromPointCloud(*cloud,*cloud_out, indices);
@@ -83,8 +82,8 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	
 	
-	BOOST_CHECK_EQUAL(p.gotnanTEST(cloud_out),0);
-	BOOST_CHECK_EQUAL(p.gotinfTEST(cloud),0);
+	BOOST_CHECK_EQUAL(stalker::gotnanTEST<pcl::PointXYZ>(*cloud_out),0);
+	BOOST_CHECK_EQUAL(stalker::gotinfTEST<pcl::PointXYZ>(*cloud),0);
 	
 	for (size_t i = 0; i < cloud->points.size (); ++i)
 	{
@@ -99,7 +98,7 @@ BOOST_AUTO_TEST_CASE(trying)
 		}
 	}
 	
-	BOOST_CHECK_EQUAL(p.gotnanTEST(cloud),0);
+	BOOST_CHECK_EQUAL(stalker::gotnanTEST(*cloud),0);
 	//BOOST_CHECK_EQUAL(p.gotinfTEST(cloud),1);
 
 	
@@ -116,8 +115,13 @@ BOOST_AUTO_TEST_CASE(trying)
 		}
 	}
 
-	BOOST_CHECK_EQUAL(p.gotnanTEST(cloud),0);
-	BOOST_CHECK_EQUAL(p.gotinfTEST(cloud),0);
+	BOOST_CHECK_EQUAL(stalker::gotnanTEST(*cloud),0);
+	BOOST_CHECK_EQUAL(stalker::gotinfTEST(*cloud),0);
+	
+	stalker::passThrough<pcl::PointXYZ>(cloud, cloudt, "u", 1, 2);
+	stalker::passThrough<pcl::PointXYZ>(cloud, cloudt, "x", 1, 2);
+	stalker::passThrough<pcl::PointXYZ>(cloud, cloudt, "y", 1, 2);
+	stalker::passThrough<pcl::PointXYZ>(cloud, cloudt, "z", 1, 2);
 
 	
 }

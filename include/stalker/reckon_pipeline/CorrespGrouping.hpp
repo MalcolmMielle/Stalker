@@ -19,10 +19,12 @@ class CorrespGrouping : public CorrespGroupingBase<T, DescriptorTypes> {
 	//ShapeLocal<T, pcl::SHOT352>* _scene; // Need to be initialise because it takes a Cloud in argument.
 	bool resol;
 	
-	double _rf_rad; //Referance frame radius default 0.015
-	double _cg_size; //Cluster size default 0.01
+	double _rf_rad; //Referance frame radius given by the user. default 0.015
+	double _rf_rad_effective; //Referance frame radius used in the calculation. Useful in case we want to use resolution invariance.
+	double _cg_size; //Cluster size given by the user. default 0.01
+	double _cg_size_effective; //Cluster size used in the calculation. Useful in case we want to use resolution invariance.
 	double _cg_thresh; //Cluster thressold default 5
-	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > _rototranslations;
+	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > _rototranslations; //Eigen vectors. give the three vector defining the position. The smallest one is the z.
 	std::vector<pcl::Correspondences> _clustered_corrs;
 	
 	public : 
@@ -30,6 +32,7 @@ class CorrespGrouping : public CorrespGroupingBase<T, DescriptorTypes> {
 	CorrespGrouping(ShapeLocal<T, DescriptorTypes>* object, ShapeLocal<T, DescriptorTypes>* scene) : CorrespGroupingBase<T, DescriptorTypes>(object, scene),/* _object(object), _scene(scene),*/resol(false), _rf_rad(0.015), _cg_size(0.01), _cg_thresh(5.0) {};
 	
 	virtual void doPipeline();
+	virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy);
 	//virtual void doPipelineOld();
 	
 	//new stuff
@@ -43,8 +46,6 @@ class CorrespGrouping : public CorrespGroupingBase<T, DescriptorTypes> {
 	virtual double getClusterThresold(){return _cg_thresh;}
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >& getRoto(){return _rototranslations;}
 	std::vector<pcl::Correspondences>& getClust(){return _clustered_corrs;}
-	
-	
 	
 	virtual void clusteringHough();
 	virtual void resolutionInvariance();
@@ -70,39 +71,28 @@ class CorrespGrouping : public CorrespGroupingBase<T, DescriptorTypes> {
 
 };
 
-/*template <typename T>
-inline void CorrespGrouping<T>::doPipelineOld()
-{
-	std::cout<<"ENTER THE OLD PIPELINE ************************************"<<std::endl;
-	if(resol==true){
-		std::cout << "Rosulation"<<std::endl;
-		resolutionInvariance();
-	}
-	std::cout<<"Narmooool"<<std::endl;
-	this->estimNormal();
-		std::cout << "DownSample"<<std::endl;
-	this->_object->downsample();
-	this->_scene->downsample();
-		std::cout << "Descriptors"<<std::endl;
-	this->_scene->computeDescriptors();
-	this->_object->computeDescriptors();
-	
-	point2PointCorrespondance();
-	clusteringHough();
-	
-	
-}*/
 
 template <typename T, typename DescriptorTypes>
 inline void CorrespGrouping<T, DescriptorTypes>::doPipeline()
 {
-	std::cout<<"ENTER THE PIPELINE ************************************"<<std::endl;
-	if(resol==true){
-		std::cout << "Rosulation"<<std::endl;
-		resolutionInvariance();
+	if(this->_scene->getKeypoints()->height>0 && this->_scene->getKeypoints()->width>0 && this->_object->getKeypoints()->height>0 && this->_object->getKeypoints()->height>0 ){
+		std::cout<<"ENTER THE PIPELINE ************************************"<<std::endl;
+		if(resol==true){
+			std::cout << "Rosulation"<<std::endl;
+			resolutionInvariance();
+		}
+		this->point2PointCorrespondance();
+		clusteringHough();
 	}
-	this->point2PointCorrespondance();
-	clusteringHough();
+}
+
+template <typename T, typename DescriptorTypes>
+inline void CorrespGrouping<T, DescriptorTypes>::doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy){
+	typename pcl::PointCloud<T>::Ptr p(new pcl::PointCloud<T>() );
+	pcl::fromROSMsg(*cloudy, *p);
+	this->_scene->update(p);
+	//this->doPipeline();
+	
 }
 
 
@@ -164,39 +154,18 @@ inline void CorrespGrouping<T, DescriptorTypes>::clusteringHough(){
 template <typename T, typename DescriptorTypes>
 inline void CorrespGrouping<T, DescriptorTypes>::resolutionInvariance(){
 
-	float resolution = 0;//static_cast<float> (computeCloudResolution (this->_shape));
+//static_cast<float> (computeCloudResolution (this->_shape));
 	//ATTENTION CHECK QUE CA A ETE FAIT CHEZ SHAPE !!!
-	if (resol==true)
+	if (this->_scene->getResolutionState()==true && this->_object->getResolutionState()==true)
 	{
+		double resolution=this->_object->getResolution();
 		//this->_shape_ss   *= resolution;
-		this->_rf_rad     *= resolution;
+		this->_rf_rad_effective = _rf_rad*resolution;
 		//this->_descrRad  *= resolution;
-		this->_cg_size    *= resolution;
+		this->_cg_size_effective = _rf_rad*resolution;
 	}
 
-	/*std::cout << "Model resolution:       " << resolution << std::endl;
-	std::cout << "Model sampling size:    " << model_ss_ << std::endl;
-	std::cout << "Scene sampling size:    " << scene_ss_ << std::endl;
-	std::cout << "LRF support radius:     " << rf_rad_ << std::endl;
-	std::cout << "SHOT descriptor radius: " << descr_rad_ << std::endl;
-	std::cout << "Clustering bin size:    " << cg_size_ << std::endl << std::endl;*/
-
 }
-
-/*
-template <typename PointType>
-inline void CorrespGrouping<PointType>::estimNormal()
-{
-	printinfo();
-	
-	pcl::NormalEstimationOMP<PointType, NormalType> norm_est2;
-	norm_est2.setKSearch (10);
-	norm_est2.setInputCloud (this->_object->getCloud());
-	norm_est2.compute (*(this->_object->getNormals()));
-
-	norm_est2.setInputCloud (this->_scene->getCloud());
-	norm_est2.compute (*(this->_scene->getNormals()));
-}*/
 
 
 template <typename T, typename DescriptorTypes>

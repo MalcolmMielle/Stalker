@@ -37,6 +37,7 @@ class Pipeline{
 	}
 	
 	virtual void doPipeline() = 0;
+	virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy) = 0;
 	
 	virtual void setMaxObject(int i){
 		try{
@@ -146,7 +147,6 @@ inline void Pipeline<T, DescriptorType>::checkSizeScene()
 template <typename T, typename DescriptorType>
 inline void Pipeline<T, DescriptorType>::setScene(typename pcl::PointCloud<T>::Ptr& cloud)
 {
-	std::cout << "SET THE SCENE"<<std::endl;
 	this->_scene->update(cloud);
 }
 

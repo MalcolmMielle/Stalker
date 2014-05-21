@@ -76,20 +76,28 @@ template < typename T, typename DescriptorType>
 void MainGraphic<T, DescriptorType>::doWork()
 {
 	Main<T, DescriptorType>::doWork();
-	this->gui->update(*(this->_pipeline->getObject() ));
-	this->gui->update(*(this->_pipeline->getScene() ));
-	
-	for (int i=0; i< this->_pipeline->getSizeObjects();i++){
-		std::cout<<"Getting do Work into the objectS because we have " << this->_pipeline->getSizeObjects()<<" objects"<<std::endl;
-		this->gui->update(*(this->_pipeline->getObject(i)));
+	if(this->_whichInterface==1){
+		this->gui->update(*(this->_pipeline->getObject() ));
+		this->gui->update(*(this->_pipeline->getScene() ));
 	}
-	for (int i=0; i< this->_pipeline->getSizeScenes();i++){
-		std::cout<<"Getting do Work into the sceneS because we have "<<this->_pipeline->getSizeScenes()<<" scenes" <<std::endl;
-		this->gui->update(*(this->_pipeline->getScene(i)));
+	else{
+		for (int i=0; i< this->_pipeline->getSizeObjects();i++){
+			std::cout<<"Getting do Work into the objectS because we have " << this->_pipeline->getSizeObjects()<<" objects"<<std::endl;
+			this->gui->update(*(this->_pipeline->getObject(i)));
+		}
+		for (int i=0; i< this->_pipeline->getSizeScenes();i++){
+			std::cout<<"Getting do Work into the sceneS because we have "<<this->_pipeline->getSizeScenes()<<" scenes" <<std::endl;
+			this->gui->update(*(this->_pipeline->getScene(i)));
+		}
 	}
 	//this->_pipeline->affiche();
-	this->gui->printPipeline(*(this->_pipeline));
-	this->gui->show();
+	if(this->_pipeline->getObject()->getCloud()->width>0 && this->_pipeline->getObject()->getCloud()->height>0){
+		this->gui->printPipeline(*(this->_pipeline));
+		
+		this->gui->show();
+		int i;
+		scanf("%d", &i);
+	}
 }
 
 

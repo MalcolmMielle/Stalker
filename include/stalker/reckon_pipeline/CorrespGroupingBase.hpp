@@ -10,6 +10,7 @@
 #include <pcl/features/board.h>
 #include <pcl/features/shot_lrf.h>
 #include <pcl/recognition/cg/geometric_consistency.h>
+#include <Preprocessing.hpp>
 
 
 template <typename T, typename DescriptorTypes>
@@ -29,6 +30,8 @@ class CorrespGroupingBase : public Pipeline<T, DescriptorTypes> {
 template <typename T, typename DescriptorTypes>
 inline void CorrespGroupingBase<T, DescriptorTypes>::point2PointCorrespondance(){
 	
+	stalker::tic();
+	
 	pcl::KdTreeFLANN<DescriptorTypes> match_search;
 	
 	match_search.setInputCloud (this->_object->getDescr());
@@ -44,7 +47,7 @@ inline void CorrespGroupingBase<T, DescriptorTypes>::point2PointCorrespondance()
 		}
 
 		int found_neighs = match_search.nearestKSearch (this->_scene->getDescr()->at(i), 1, neigh_indices, neigh_sqr_dists);
-
+		if(kop%100==0){std::cout<<"Calculating the Point to Point correspondence..."<<std::endl;}
 		//  add match only if the squared descriptor distance is less than 0.25 (SHOT descriptor distances are between 0 and 1 by design)
 		if(found_neighs == 1 && neigh_sqr_dists[0] < 0.25f) {
 			pcl::Correspondence corr (neigh_indices[0], static_cast<int> (i), neigh_sqr_dists[0]);
@@ -53,6 +56,8 @@ inline void CorrespGroupingBase<T, DescriptorTypes>::point2PointCorrespondance()
 		}
 		
 	}
+	std::cout<<std::endl<<"Point 2 poitn correspondance grouping ";
+	stalker::toc();
 	std::cout<<"number of entries "<<kop<<std::endl;
 	std::cout << "Correspondences found: " << _model_scene_corrs->size() << std::endl;
 }

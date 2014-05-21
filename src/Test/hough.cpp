@@ -22,6 +22,7 @@
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/common/transforms.h>
 #include <pcl/console/parse.h>
+#include "Preprocessing.hpp"
 
 typedef pcl::PointXYZRGBA PointType;
 bool show_keypoints_ (true);
@@ -38,11 +39,11 @@ float cg_thresh_ (5.0f);
 BOOST_AUTO_TEST_CASE(trying)
 {
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr object (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk.pcd", *object);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd", *object);
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
 	
-	CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352> cg(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob2",0.03));
+	CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352> cg(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("bob2",0.015));
 	
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > rototranslations;
 	
@@ -137,6 +138,9 @@ BOOST_AUTO_TEST_CASE(trying)
 			}
 		}
 	}
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud22 (new pcl::PointCloud<pcl::PointXYZRGBA>);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud22);
+	std::cout<<"resolution"<< stalker::computeCloudResolution<pcl::PointXYZRGBA>(cloud22)<<std::endl;
 
 	while (!viewer.wasStopped ())
 	{

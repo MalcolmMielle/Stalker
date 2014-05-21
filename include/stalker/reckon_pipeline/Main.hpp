@@ -11,14 +11,20 @@
 #include <Shape3D.hpp>
 #include "Pipeline.hpp"
 #include <pcl/filters/filter.h>
-#include "Preprocessing.hpp"
+#include <Preprocessing.hpp>
+
 
 
 template <typename T,typename DescriptorType>
 class Main{
 	protected : 
+		
+	int _whichInterface;
 	int _maxObject;
 	int _maxScene;
+	bool resol_state;
+	double _resolution;
+	
 	typename pcl::PointCloud<T>::Ptr _scene; //Last Scene receive
 	typename pcl::PointCloud<T>::Ptr _object; //Last Object receive
 	
@@ -27,12 +33,12 @@ class Main{
 	
 	/*I chose the point cloud because it's easier to have something general of use if we receive a Point Cloud through Ros nodes*/
 	Pipeline<T, DescriptorType>* _pipeline;
-	Preprocessing<T> _prep;
+
 	
 	public : 
 	
 	/********DEFAULT CONSTRCTOR***********/
-	Main() : _maxObject(10), _maxScene(20),
+	Main() : _whichInterface(1), _maxObject(10), _maxScene(20),resol_state(false),_resolution(0),
 	_scene(new pcl::PointCloud<T>()), 
 	_object(new pcl::PointCloud<T>()), 
 	_pipeline(new CorrespGrouping<T, DescriptorType>(new ShapeLocal<T, DescriptorType>("object"), new ShapeLocal<T, DescriptorType>("scene"))) 
@@ -42,7 +48,7 @@ class Main{
 	}
 
 	/********you have the Clouds CONSTRCTOR***********/
-	Main(typename pcl::PointCloud<T>::Ptr& object, typename pcl::PointCloud<T>::Ptr& scene) : _maxObject(10), _maxScene(20),
+	Main(typename pcl::PointCloud<T>::Ptr& object, typename pcl::PointCloud<T>::Ptr& scene) : _whichInterface(1), _maxObject(10), _maxScene(20),resol_state(false),_resolution(0),
 	_scene(scene), 
 	_object(object), 
 	_pipeline(new CorrespGrouping<T, DescriptorType>(new ShapeLocal<T, DescriptorType>("object"), new ShapeLocal<T, DescriptorType>("scene")))
@@ -52,7 +58,7 @@ class Main{
 	}
 	
 	/********you have the Pipeline CONSTRCTOR***********/
-	Main(Pipeline<T, DescriptorType>* p) : _maxObject(10), _maxScene(20),
+	Main(Pipeline<T, DescriptorType>* p) : _whichInterface(1), _maxObject(10), _maxScene(20),resol_state(false),_resolution(0),
 	_scene(new pcl::PointCloud<T>()), 
 	_object(new pcl::PointCloud<T>()), 
 	_pipeline(p)
@@ -61,7 +67,7 @@ class Main{
 	}
 
 	/********You have everything CONSTRCTOR***********/
-	Main(typename pcl::PointCloud<T>::Ptr& object, typename pcl::PointCloud<T>::Ptr& scene, Pipeline<T, DescriptorType>* p) : _maxObject(10), _maxScene(20),
+	Main(typename pcl::PointCloud<T>::Ptr& object, typename pcl::PointCloud<T>::Ptr& scene, Pipeline<T, DescriptorType>* p) : _whichInterface(1), _maxObject(10), _maxScene(20),resol_state(false),_resolution(0),
 	_scene(scene), 
 	_object(object), 
 	_pipeline(p)
@@ -104,19 +110,35 @@ class Main{
 	virtual void checkSizeObject();
 	virtual void checkSizeScene();
 	
-	typename pcl::PointCloud<T>::Ptr getCloud(){return _scene;}
-	typename pcl::PointCloud<T>::Ptr getShape(){return _object;}
-	Pipeline<T, DescriptorType>* getPipeline(){return _pipeline;}
+	virtual typename pcl::PointCloud<T>::Ptr getCloud(){return _scene;}
+	virtual typename pcl::PointCloud<T>::Ptr getShape(){return _object;}
+	virtual Pipeline<T, DescriptorType>* getPipeline(){return _pipeline;}
+	virtual int getInterface(){return _whichInterface;}
 	
+	virtual void setResolution(bool b){resol_state=b;_pipeline->getObject()->setResolutionState(b);_pipeline->getScene()->setResolutionState(b);}
 	virtual void setScene(typename pcl::PointCloud<T>::Ptr& c);
 	virtual void setObject(typename pcl::PointCloud<T>::Ptr& s);
 	virtual void setPipeline(Pipeline<T, DescriptorType>* p){delete _pipeline; _pipeline=p;}
-	
+	virtual void setInterface(int i){
+		try{
+			if(i==1 || i==2){
+				_whichInterface=i;
+			}
+			else{
+				throw std::invalid_argument("no Interface selected in Main. _whichInterface must be either 1 for using 1 point cloud and 1 object old interface or 2 for using the vector of scene and model interface. Interface number 1 should be erased at some point but it still supported for now");//Need to figure out how to change and know the shape's names !! Maybe a yaml file...
+			}
+		}
+		catch(std::exception const& e){
+			std::cerr << "ERREUR in Main in stalker : " << e.what() << std::endl;
+			exit(0);
+		}
+	}
+		
+		
+		
 	//New interface
 	virtual void addObject(typename pcl::PointCloud<T>::Ptr& c){_objects.push_back(c);checkSizeObject();_pipeline->addObject(c);}
-	virtual void addScene(typename pcl::PointCloud<T>::Ptr& c){_scenes.push_back(c);checkSizeScene();_pipeline->addScene(c);
-		
-	}
+	virtual void addScene(typename pcl::PointCloud<T>::Ptr& c){_scenes.push_back(c);checkSizeScene();_pipeline->addScene(c);}
 	
 	virtual void removeObject(typename pcl::PointCloud<T>::Ptr& c);
 	virtual void removeScene(typename pcl::PointCloud<T>::Ptr& c);
@@ -132,6 +154,11 @@ class Main{
 	virtual void loadModel(const typename pcl::PointCloud<T>::Ptr cloudy);
 	virtual void doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy); 
 	virtual void doWork();
+	
+		virtual void setResolutionState(bool b){ resol_state=b;}
+	virtual void setResolution(double r){_resolution=r;}
+		virtual double getResolutionState(){return resol_state;}
+	virtual double getResolution(){return _resolution;}
 	
 };
 
@@ -231,31 +258,24 @@ inline void Main<T, DescriptorType>::clearScenes(){
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2ConstPtr& cloudy){
 	pcl::fromROSMsg(*cloudy, *_object);
-	//Preprocessing
-	try{
-		bool nany= _prep.gotnanTEST(_object);
-		if(nany==true || _object->is_dense==false){
-			_object->is_dense=false;
-			_prep.removeNan(_object);
-			_prep.removeNanNormals(_object);
-			
-			std::cout<<"remove dense from model"<<std::endl;
-			
-			if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense : nan");
-			if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense : inf");
-			
-			_object->is_dense=true;
-		}
-		else{std::cout<<"DENSE :D"<<std::endl;}
-	}
-	catch(std::exception const& e){
-		std::cerr << "ERREUR model is not dense : " << e.what() << std::endl;	
+	/**************************************************/
+	//FIX THE RESOLUTION FROM THE MODEL HERE !//
+	double reso;
+	if(resol_state==true){
+		reso=stalker::computeCloudResolution<T>(_object);
 	}
 	
-	std::cout<<"setObject"<<std::endl;
-	_pipeline->setObject(_object);
-	std::cout<<"addObject"<<std::endl;
-	addObject(_object);
+	
+	/**************************************************/
+	if(_whichInterface==1){
+		_pipeline->setObject(_object);
+		if(resol_state==true){
+			_pipeline->getObject()->setResolution(reso);
+		}
+	}
+	else{
+		addObject(_object);
+	}
 }
 
 
@@ -263,32 +283,25 @@ template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>::Ptr cloudy){
 	
 	_object=cloudy;
+	/**************************************************/
+	//FIX THE RESOLUTION FROM THE MODEL HERE !//
+	double reso;
+	if(resol_state==true){
+		reso=stalker::computeCloudResolution<T>(_object);
+	}
 	
-	//PREPROCESSING
-	try{
-		//TOO CHANGE !!
-		bool nany= _prep.gotnanTEST(_object);
-		
-		if(nany==true || _object->is_dense==false){
-			_object->is_dense=false;
-			_prep.removeNan(_object);
-			_prep.removeNanNormals(_object);
-			
-			std::cout<<"remove dense from model"<<std::endl;
-			
-			if(_prep.gotnanTEST(_object)) throw std::invalid_argument("not dense : nan");
-			if(_prep.gotinfTEST(_object)) throw std::invalid_argument("not dense : inf");
-			
-			_object->is_dense=true;
+	
+	/**************************************************/
+	if(_whichInterface==1){
+		_pipeline->setObject(_object);
+		if(resol_state==true){
+			_pipeline->getObject()->setResolution(reso);
 		}
-		else{std::cout<<"DENSE :D"<<std::endl;}
 	}
-	catch(std::exception const& e){
-		std::cerr << "ERREUR model is not dense : " << e.what() << std::endl;	
+	else{
+		addObject(_object);
 	}
-	
-	_pipeline->setObject(_object);
-	addObject(_object);
+
 }
 
 /**********************DO WORK FUNCTIONS***************/
@@ -299,36 +312,26 @@ inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy){
 	pcl::fromROSMsg(*cloudy, *_scene);
-	if(_scene->is_dense==false){
-		std::cout<<"NOT DENNNNNNNSE"<<std::endl;
-	}
-	/****PREPROCESSING****/
 	
-	//Remove NANS
-	try{
-		bool nany= _prep.gotnanTEST(_scene);
-		if(nany==true || _scene->is_dense==false){
-			_scene->is_dense=false;
-			_prep.removeNan(_scene);
-			_prep.removeNanNormals(_scene);
-			
-			std::cout<<"remove dense from scene"<<std::endl;
-			
-			if(_prep.gotnanTEST(_scene)) throw std::invalid_argument("not dense : nan");
-			if(_prep.gotinfTEST(_scene)) throw std::invalid_argument("not dense : inf");
-			
-			_scene->is_dense=true;
+	/**************************************************/
+	//TAKE THE RESOLUTION FROM THE MODEL HERE !//
+	double reso;
+	if(resol_state==true){
+		reso=_pipeline->getObject()->getResolution();
+	}
+	
+	/**************************************************/
+	
+	if(_whichInterface==1){
+		_pipeline->setScene(_scene);
+		if(resol_state==true){
+			_pipeline->getScene()->setResolution(reso);
 		}
-		else{std::cout<<"DENSE :D"<<std::endl;}
 	}
-	catch(std::exception const& e){
-		std::cerr << "ERREUR scene is not dense : " << e.what() << std::endl;	
+	else{
+		addScene(_scene);
 	}
 	
-	
-	std::cout<<_scene->size() <<std::endl;
-	_pipeline->setScene(_scene);
-	addScene(_scene); //Need to figure out how to change and know the shape's names !! Maybe a yaml file...
 	doWork();
 }
 
@@ -338,15 +341,25 @@ inline void Main<T, DescriptorType>::doWork(){
 	//TODO processing here
 	
 	/**************************MAIN PIPELINE OF RECOGNITION**********************/
-	
-	_pipeline->doPipeline();
-	_pipeline->affiche();
-	
-	exit(0);
-	
+	if(_whichInterface==1){
+		if(_object->width>0 && _object->height>0 &&_scene->width>0 && _scene->height>0){
+			_pipeline->doPipeline();
+			_pipeline->affiche();
+		}
+	}
+	else{
+		if(_pipeline->getAllObjects().size()>0 && _pipeline->getAllScenes().size()>0){
+			_pipeline->doPipeline();
+			_pipeline->affiche();
+		}
+	}
+
 	//TODO Post Processing here
 
 }
+
+
+
 
 
 #endif
