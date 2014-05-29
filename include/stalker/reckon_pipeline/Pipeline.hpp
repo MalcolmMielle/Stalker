@@ -153,8 +153,11 @@ inline void Pipeline<T, DescriptorType>::setScene(typename pcl::PointCloud<T>::P
 template <typename T, typename DescriptorType>
 inline void Pipeline<T, DescriptorType>::setObject(typename pcl::PointCloud<T>::Ptr& obj)
 {
-	std::cout << "SET THE Object"<<std::endl;
+	std::cout << "THE Object before : "<<_object->getCloud()->size()<<std::endl;
+	
 	this->_object->update(obj);
+	
+	std::cout << "THE Object after : "<<_object->getCloud()->size()<<std::endl;
 }
 
 template <typename PointType, typename DescriptorType>

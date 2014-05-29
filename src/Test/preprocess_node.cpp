@@ -37,13 +37,20 @@ void testin(const sensor_msgs::PointCloud2ConstPtr& cloudy){
 	stalker::removeNan<pcl::PointXYZRGBA>(*cloud, *cloud);
 	//doPreprocessing(*cloud, *cloud_filtered);
 	
+	std::cout<<"How much downsample for the size "<<cloud->width*cloud->height <<" cloud resolution = "<< stalker::computeCloudResolution<pcl::PointXYZRGBA>(cloud) << std::endl;
+	
 	stalker::passThrough<pcl::PointXYZRGBA>(cloud, cloud, "z", 0.8, 3.5);
 	std::cout<<"Doing down sample"<<std::endl;
 	
 	std::cout<<"How much downsample for the size "<<cloud->width<<" "<<cloud->height <<" cloud resolution = "<< stalker::computeCloudResolution<pcl::PointXYZRGBA>(cloud) << std::endl;
-	scanf("%lf",&ds);
 	
-	stalker::downSample<pcl::PointXYZRGBA>(cloud, cloud_filtered, ds);
+	double b=stalker::computeCloudResolution<pcl::PointXYZRGBA>(cloud);
+	double size=cloud->width*cloud->height;
+	double radius=((0.7*8000)+(0.3*b))/size;
+	
+	std::cout << "radius "<<radius<<std::endl;
+	
+	stalker::downSample<pcl::PointXYZRGBA>(cloud, cloud_filtered, radius);
 	std::cout<<"Doing the removal"<<std::endl;
 	
 	//stalker::statisticalOutilerRemoval<pcl::PointXYZRGBA>(cloud_filtered, cloud_filtered, 50, 1.0);

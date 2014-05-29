@@ -19,7 +19,6 @@
 #include <exception>
 #include "Gui.hpp"
 
-//#define DescriptorType pcl::SHOT352
 #define NormalType pcl::Normal 
 #define RFType pcl::ReferenceFrame 
 
@@ -36,19 +35,20 @@ class Shape{
 	typename pcl::PointCloud<T>::Ptr _shape_keypoints; //model_keypoint
 	pcl::PointCloud<NormalType>::Ptr _shape_normals;	//Point cloud of Normals
 	typename pcl::PointCloud<DescriptorType>::Ptr _desc;	 //Point Cloud of Descriptors
-	double _descrRad; //Radius given by the user to calculate the descriptors
+	double _descrRad; //Radius given by the user to calculate the descriptors Default 0.02
 	double _descrRad_effective; //Radius actually used in the calculation. Useful in case we need resolution invariance.
-	double _shape_ss; //shape_sampling size given by the user used to downsample
+	double _shape_ss; //shape_sampling size given by the user used to downsample. Default 0.01
 	double _shape_ss_effective; //shape_sampling actually used in the calculation to downsample
 	bool resol_state; //Indicate if we want to use the resolution invariance
-	double _resolution; //Value of the resolution
+	double _resolution; //Value of the resolution. Default 0
+	double _k; //Normal estimation diameter. Default 10
 	
 	public :
-	Shape(const std::string& name) : _id(name), _shape(new pcl::PointCloud<T>()),_shape_keypoints(new pcl::PointCloud<T>()),_shape_normals(new pcl::PointCloud<NormalType>()), _desc(new pcl::PointCloud<DescriptorType>()), _descrRad(0.02),_descrRad_effective(0.02), _shape_ss (0.01), _shape_ss_effective(0.01), resol_state(false),_resolution(0){};
+	Shape(const std::string& name) : _id(name), _shape(new pcl::PointCloud<T>()),_shape_keypoints(new pcl::PointCloud<T>()),_shape_normals(new pcl::PointCloud<NormalType>()), _desc(new pcl::PointCloud<DescriptorType>()), _descrRad(0.02),_descrRad_effective(0.02), _shape_ss (0.01), _shape_ss_effective(0.01), resol_state(false),_resolution(0), _k(10){};
 	
-	Shape(const std::string& name, double sampling_size) : _id(name), _shape(new pcl::PointCloud<T>()),_shape_keypoints(new pcl::PointCloud<T>()),_shape_normals(new pcl::PointCloud<NormalType>()), _desc(new pcl::PointCloud<DescriptorType>()), _descrRad(0.02),_descrRad_effective(0.02), _shape_ss (sampling_size), _shape_ss_effective(sampling_size), resol_state(false),_resolution(0){};
+	Shape(const std::string& name, double sampling_size) : _id(name), _shape(new pcl::PointCloud<T>()),_shape_keypoints(new pcl::PointCloud<T>()),_shape_normals(new pcl::PointCloud<NormalType>()), _desc(new pcl::PointCloud<DescriptorType>()), _descrRad(0.02),_descrRad_effective(0.02), _shape_ss (sampling_size), _shape_ss_effective(sampling_size), resol_state(false),_resolution(0), _k(10){};
 	
-	Shape(const std::string& name, double sampling_size, double descriptor_radius) : _id(name), _shape(new pcl::PointCloud<T>()),_shape_keypoints(new pcl::PointCloud<T>()),_shape_normals(new pcl::PointCloud<NormalType>()), _desc(new pcl::PointCloud<DescriptorType>()), _descrRad(descriptor_radius), _descrRad_effective(descriptor_radius), _shape_ss (sampling_size), _shape_ss_effective(sampling_size), resol_state(false),_resolution(0){};
+	Shape(const std::string& name, double sampling_size, double descriptor_radius) : _id(name), _shape(new pcl::PointCloud<T>()),_shape_keypoints(new pcl::PointCloud<T>()),_shape_normals(new pcl::PointCloud<NormalType>()), _desc(new pcl::PointCloud<DescriptorType>()), _descrRad(descriptor_radius), _descrRad_effective(descriptor_radius), _shape_ss (sampling_size), _shape_ss_effective(sampling_size), resol_state(false),_resolution(0), _k(10){};
 
 	virtual ~Shape(){
 		std::cout<<"delete shape "<<_id <<std::endl;
@@ -58,20 +58,26 @@ class Shape{
 	virtual const typename pcl::PointCloud<T>::Ptr& getKeypoints(){return _shape_keypoints;}
 	virtual const typename pcl::PointCloud<NormalType>::Ptr& getNormals(){return _shape_normals;}
 	virtual typename pcl::PointCloud<DescriptorType>::Ptr& getDescr(){return _desc;}
-	virtual double getRadius(){return _descrRad;}
+	virtual double getRadiusDescriptors(){return _descrRad;}
 	virtual double getSamplingSize(){return _shape_ss;}
+	virtual double getRadiusDescriptorsEffective(){return _descrRad_effective;}
+	virtual double getSamplingSizeEffective(){return _shape_ss_effective;}
 	virtual const std::string& getName(){return _id;}
 	virtual double getResolutionState(){return resol_state;}
 	virtual double getResolution(){return _resolution;}
+	virtual double getNormalEstimDiameter(){return _k;}
 	
 	virtual void set(typename pcl::PointCloud<T>::Ptr& p){_shape=p;}
-	virtual void setRadius(double r){_descrRad=r;}
-	virtual void setSamplingSize(double r){_shape_ss=r;}
+	virtual void setRadiusDescriptors(double r){_descrRad=r;}//Radius given by the user to calculate the descriptors Default 0.02
+	virtual void setSamplingSize(double r){_shape_ss=r;}//shape_sampling size given by the user used to downsample. Default 0.01
+	virtual void setRadiusDescriptorsEffective(double r){_descrRad_effective=r;}//Radius used to calculate the descriptors Default 0.02
+	virtual void setSamplingSizeEffective(double r){_shape_ss_effective=r;}//shape_sampling size used to downsample. Default 0.01
 	virtual void setDescriptors(typename pcl::PointCloud<DescriptorType>::Ptr& desc){_desc=desc;}
 	virtual void setNormals(pcl::PointCloud<NormalType>::Ptr& normal){_shape_normals=normal;}
 	virtual void setName(std::string& name){_id=name;}
 	virtual void setResolutionState(bool b){ resol_state=b;}
 	virtual void setResolution(double r){_resolution=r;}
+	virtual void setNormalEstimDiameter(double k){_k=k;}
 	//update Shape state
 	
 	virtual void compute()=0;
@@ -107,6 +113,8 @@ inline void Shape<T, DescriptorType>::update(typename pcl::PointCloud<T>::Ptr& p
 	//Clustering pipe
 	this->_shape=p;
 	
+	std::cout << "The point cloud is of size : "<<_shape->size()<<std::endl;
+	
 	compute();
 }
 
@@ -131,10 +139,12 @@ inline void Shape<T, DescriptorType>::resolutionInvariance(){
 
 	if (_resolution != 0.0f)
 	{
+		std::cout <<"changind resolution : "<<_resolution<<std::endl;
 		this->_shape_ss_effective   = _shape_ss* _resolution;
 		//rf_rad_     *= resolution;
 		this->_descrRad_effective  = _descrRad* _resolution;
 		//this->cg_size_    *= resolution;
+
 	}
 
 }

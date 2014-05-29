@@ -77,7 +77,9 @@ void MainGraphic<T, DescriptorType>::doWork()
 {
 	Main<T, DescriptorType>::doWork();
 	if(this->_whichInterface==1){
+		std::cout << "affiche object" << std::endl;
 		this->gui->update(*(this->_pipeline->getObject() ));
+		std::cout << "affiche scene" << std::endl;
 		this->gui->update(*(this->_pipeline->getScene() ));
 	}
 	else{
@@ -92,11 +94,14 @@ void MainGraphic<T, DescriptorType>::doWork()
 	}
 	//this->_pipeline->affiche();
 	if(this->_pipeline->getObject()->getCloud()->width>0 && this->_pipeline->getObject()->getCloud()->height>0){
+		std::cout << "affiche pipeline" << std::endl;
 		this->gui->printPipeline(*(this->_pipeline));
-		
-		this->gui->show();
-		int i;
-		scanf("%d", &i);
+		std::cout << "show" << std::endl;
+		int in=0;
+		while(in<100){
+			this->gui->show();
+			++in;
+		}
 	}
 }
 

@@ -40,7 +40,7 @@ int main (int argc, char **argv){
 	std::string path2model;
 	priv_node.param<std::string>("/model", path2model, "none");
 	
-	main.setResolution(true);
+	//main.setResolution(true);
 		
 	/*****************************************/
 	

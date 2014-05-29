@@ -24,6 +24,9 @@ class Pipeline;
 template<typename T, typename DescriptorType>
 class CorrespGrouping;
 
+template<typename T, typename DescriptorType>
+class CorrespGroupingBaseBase;
+
 #include <pcl/io/pcd_io.h>
 
 
@@ -55,6 +58,7 @@ class Gui{
 	//Pipeline function : 
 	virtual void printPipeline(Pipeline<T, DescriptorType>& p){p.print(this);}
 	
+	
 	//Shape function
 	virtual void add(Shape<T, DescriptorType>& sh){sh.addPrint(*this);}	
 	virtual void update(Shape<T, DescriptorType>& sh){sh.printupdate(*this);}
@@ -69,7 +73,8 @@ class Gui{
 
 	virtual void add(ShapeLocal<T, DescriptorType>& sh)=0;
 	virtual void remove(ShapeLocal<T, DescriptorType>& sh)=0;
-	virtual void printPipeline(CorrespGrouping<T, DescriptorType>& sh)=0;
+	virtual void printPipeline(CorrespGroupingBaseBase<T, DescriptorType>& p)=0;
+	//virtual void printPipeline(CorrespGrouping<T, DescriptorType>& sh)=0;
 	virtual void update(ShapeLocal<T, DescriptorType>& sh)=0;
 	
 

@@ -110,6 +110,24 @@ class Main{
 	virtual void checkSizeObject();
 	virtual void checkSizeScene();
 	
+	virtual bool gotModel(){
+		if(_object->width>0 && _object->height>0){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	
+	virtual bool gotScene(){
+		if(_scene->width>0 && _scene->height>0){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	
 	virtual typename pcl::PointCloud<T>::Ptr getCloud(){return _scene;}
 	virtual typename pcl::PointCloud<T>::Ptr getShape(){return _object;}
 	virtual Pipeline<T, DescriptorType>* getPipeline(){return _pipeline;}
@@ -233,7 +251,7 @@ inline void Main<T, DescriptorType>::removeObject(int i){
 
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::removeScene(int i){
-	std::cout<<"remove scene n "<< i << "with "<< _scenes.size()<< std::endl;
+	std::cout<<"wremove scene n "<< i << "with "<< _scenes.size()<< std::endl;
 	if(size_t(i)<_scenes.size()){
 		typename std::vector<typename pcl::PointCloud<T>::Ptr>::iterator it=_scenes.begin()+i;
 		_scenes.erase(it);
@@ -267,11 +285,16 @@ inline void Main<T, DescriptorType>::loadModel(const sensor_msgs::PointCloud2Con
 	
 	
 	/**************************************************/
+	// ATTENTION : DOES NOT WORK WELL because resoltuion is too random !!
 	if(_whichInterface==1){
-		_pipeline->setObject(_object);
 		if(resol_state==true){
 			_pipeline->getObject()->setResolution(reso);
+			_pipeline->getScene()->setResolution(reso);
+			
+			_pipeline->getObject()->resolutionInvariance();
+			_pipeline->getScene()->resolutionInvariance();
 		}
+		_pipeline->setObject(_object);
 	}
 	else{
 		addObject(_object);
@@ -292,11 +315,18 @@ inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>
 	
 	
 	/**************************************************/
+	// ATTENTION : DOES NOT WORK WELL because resolution is to random!!
 	if(_whichInterface==1){
-		_pipeline->setObject(_object);
+
 		if(resol_state==true){
 			_pipeline->getObject()->setResolution(reso);
+			_pipeline->getScene()->setResolution(reso);
+			
+			_pipeline->getObject()->resolutionInvariance();
+			_pipeline->getScene()->resolutionInvariance();
+			
 		}
+		_pipeline->setObject(_object);
 	}
 	else{
 		addObject(_object);
@@ -315,18 +345,11 @@ inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstP
 	
 	/**************************************************/
 	//TAKE THE RESOLUTION FROM THE MODEL HERE !//
-	double reso;
-	if(resol_state==true){
-		reso=_pipeline->getObject()->getResolution();
-	}
 	
 	/**************************************************/
 	
 	if(_whichInterface==1){
 		_pipeline->setScene(_scene);
-		if(resol_state==true){
-			_pipeline->getScene()->setResolution(reso);
-		}
 	}
 	else{
 		addScene(_scene);
@@ -338,7 +361,6 @@ inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstP
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(){
 	std::cout<<"doWork"<<std::endl;
-	//TODO processing here
 	
 	/**************************MAIN PIPELINE OF RECOGNITION**********************/
 	if(_whichInterface==1){
@@ -353,8 +375,6 @@ inline void Main<T, DescriptorType>::doWork(){
 			_pipeline->affiche();
 		}
 	}
-
-	//TODO Post Processing here
 
 }
 

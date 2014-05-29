@@ -26,7 +26,7 @@
 
 
 typedef pcl::PointXYZRGBA PointType;
-typedef pcl::Histogram<153> Descriptor;
+typedef pcl::SHOT352 Descriptor;
 
 bool show_keypoints_ (true);
 bool show_correspondences_ (true);
@@ -42,22 +42,33 @@ float cg_thresh_ (5.0f);
 BOOST_AUTO_TEST_CASE(trying)
 {
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr object (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd", *object);
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
+	//pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd", *object);
+	pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord00000.pcd", *object);
 	
-	CorrespGrouping<pcl::PointXYZRGBA, Descriptor> cg(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob2",0.015));
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZRGBA>);
+	pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord200000.pcd", *cloud2);
+	
+	//CorrespGrouping<pcl::PointXYZRGBA, Descriptor> cg(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob2",0.015));
+	
+	CorrespGrouping<pcl::PointXYZRGBA, Descriptor> cg(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob2"));
 	
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > rototranslations;
 	
 	bool show_correspondences_=true;
 	bool show_keypoints_=true;
-	/***FUNCTION***/
-	std::cout<<"Set functions"<<std::endl;
-	cg.setObject(object);
-	cg.setScene(cloud2);
 	
-	cg.doPipeline();
+	cg.setPostProcICPThresh(0.00007);
+	cg.getObject()->setRadiusDescriptorsEffective(0.05);
+	cg.getScene()->setRadiusDescriptorsEffective(0.05);
+	cg.getObject()->setSamplingSizeEffective(0.01);
+	cg.getScene()->setSamplingSizeEffective(0.01);
+	
+	/***FUNCTION***/
+
+
+	cg.setObject(cloud2);
+	cg.setScene(object);
+	
 	cg.doPipeline();
 	
 	/*********/

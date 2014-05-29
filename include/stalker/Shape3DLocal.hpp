@@ -2,8 +2,10 @@
 #define SHAPE3DLOCAL_MALCOLM_H
 
 #include <pcl/features/shot_omp.h>
-#include <pcl/features/normal_3d_omp.h>
 #include <pcl/features/spin_image.h>
+#include <pcl/point_types.h>
+#include <pcl/features/fpfh.h>
+#include <pcl/features/fpfh_omp.h>
 #include "Shape3D.hpp"
 //#include "PreprocessingSimple.hpp"
 #include "Preprocessing.hpp"
@@ -46,6 +48,7 @@ class ShapeLocalBase : public Shape<T, DescriptorType>{
 	/***/
 	
 	virtual void computeDescriptors(){
+		std::cout<<"Default descriptor"<<std::endl;
 		pcl::SHOTEstimationOMP<T, NormalType, DescriptorType> descr_est;
 		descr_est.setRadiusSearch (this->_descrRad);
 		descr_est.setInputCloud (this->_shape_keypoints);
@@ -53,6 +56,40 @@ class ShapeLocalBase : public Shape<T, DescriptorType>{
 		descr_est.setSearchSurface (this->_shape);
 		std::cout<<"Computin"<<std::endl;
 		descr_est.compute (*(this->_desc)); //pointer of desc
+	}
+	
+	virtual void compute(){
+		stalker::tic();
+		std::cout << "Normal"<<std::endl;
+
+		stalker::removeNan<T>(*(this->_shape), *(this->_shape));
+		
+		
+		stalker::estimNormal<T, NormalType>(this->_shape, this->_shape_normals, this->_k);
+		
+		if(this->_shape->size()>1000){
+			std::cout << "Downsample"<<std::endl;
+			stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
+		}
+		else{
+			pcl::copyPointCloud(*(this->_shape), (*this->_shape_keypoints));
+		}
+		
+		
+		std::cout << "Pass Through"<<std::endl;
+		
+		//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
+		
+		std::cout << "Outlier removal"<<std::endl;
+		
+		//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
+		
+		std::cout << "compute descriptors"<<std::endl;
+		
+		this->computeDescriptors();
+		std::cout<<std::endl<<std::endl;
+		std::cout<<"Shape ";
+		stalker::toc();
 	}
 		
 };
@@ -80,11 +117,45 @@ class ShapeLocalBase<T, pcl::SHOT1344> : public Shape<T, pcl::SHOT1344>{
 		descr_est.compute (*(this->_desc)); //pointer of desc
 	}
 	
+	virtual void compute(){
+		stalker::tic();
+		std::cout << "Normal"<<std::endl;
+
+		stalker::removeNan<T>(*(this->_shape), *(this->_shape));
+		
+		
+		stalker::estimNormal<T, NormalType>(this->_shape, this->_shape_normals, this->_k);
+		
+		if(this->_shape->size()>10000){
+			std::cout << "Downsample"<<std::endl;
+			stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
+		}
+		else{
+			pcl::copyPointCloud(*(this->_shape), (*this->_shape_keypoints));
+		}
+		
+		
+		std::cout << "Pass Through"<<std::endl;
+		
+		//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
+		
+		std::cout << "Outlier removal"<<std::endl;
+		
+		//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
+		
+		std::cout << "compute descriptors"<<std::endl;
+		
+		this->computeDescriptors();
+		std::cout<<std::endl<<std::endl;
+		std::cout<<"Shape ";
+		stalker::toc();
+	}
+	
 };
 
 
 template <typename T>
-class ShapeLocalBase<T,  pcl::Histogram<153> > : public Shape<T,  pcl::Histogram<153> >{
+class ShapeLocalBase<T, pcl::Histogram<153> > : public Shape<T,  pcl::Histogram<153> >{
 	public :
 		
 	ShapeLocalBase(const std::string& name) : Shape<T, pcl::Histogram<153> >(name){};
@@ -98,61 +169,126 @@ class ShapeLocalBase<T,  pcl::Histogram<153> > : public Shape<T,  pcl::Histogram
 		std::cout << "Spin Image Descriptors !"<<std::endl;
 		pcl::SpinImageEstimation<T, NormalType, pcl::Histogram<153> > descr_est;
 		descr_est.setRadiusSearch (this->_descrRad_effective);
-		descr_est.setInputCloud (this->_shape_keypoints);
+		descr_est.setInputCloud (this->_shape_keypoints); //Consider everyting
 		descr_est.setInputNormals (this->_shape_normals);
 		descr_est.setSearchSurface (this->_shape);
 		std::cout<<"Computin"<<std::endl;
 		descr_est.compute (*(this->_desc)); //pointer of desc
 	}
 	
+	virtual void compute(){
+		stalker::tic();
+		std::cout << "RemoveNan"<<std::endl;
+
+		stalker::removeNan<T>(*(this->_shape), *(this->_shape));
+		
+		if(this->_shape->size()>10000){
+			std::cout << "Downsample"<<std::endl;
+			stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
+		}
+		else{
+			pcl::copyPointCloud(*(this->_shape), (*this->_shape_keypoints));
+		}
+
+		std::cout << "Normal "<<std::endl;
+		stalker::estimNormal<T, NormalType>(this->_shape_keypoints, this->_shape_normals, this->_k);
+		
+		//std::cout << "Pass Through"<<std::endl;
+		
+		//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
+		
+		//std::cout << "Outlier removal"<<std::endl;
+		
+		//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
+		
+		std::cout << "compute descriptors"<<std::endl;
+
+		this->computeDescriptors();
+
+		//Spin image need the same number of normal than keypoints. Thus we calculate the normals after the downsample and from the keypoints Point Coud.
+		stalker::estimNormal<T, NormalType>(this->_shape, this->_shape_normals, this->_k);
+		
+		std::cout<<std::endl<<std::endl;
+		std::cout<<"Shape ";
+		stalker::toc();
+	}
+	
 };
 
-//FPFH =>pcl::FPFHSignature33
+//FPFH got a field named histogram[33]
+template <typename T>
+class ShapeLocalBase<T, pcl::FPFHSignature33 > : public Shape<T,  pcl::FPFHSignature33 >{
+	public :
+		
+	ShapeLocalBase(const std::string& name) : Shape<T, pcl::FPFHSignature33 >(name){};
+	ShapeLocalBase(const std::string& name, double sampling_size) : Shape<T, pcl::FPFHSignature33 >(name, sampling_size){};
+	ShapeLocalBase(const std::string& name, double sampling_size, double descriptor_radius) : Shape<T, pcl::FPFHSignature33 >(name, sampling_size, descriptor_radius){};
+	
+	/***/
+	
+	virtual void computeDescriptors(){
+		// USING THE COLORS
+		std::cout << "Spin Image Descriptors !"<<std::endl;
+		pcl::FPFHEstimationOMP<T, NormalType, pcl::FPFHSignature33 > fpfh;
+		fpfh.setRadiusSearch (this->_descrRad_effective);
+		fpfh.setInputCloud (this->_shape_keypoints);
+		fpfh.setInputNormals (this->_shape_normals);
+		// Create an empty kdtree representation, and pass it to the FPFH estimation object.
+		// Its content will be filled inside the object, based on the given input dataset (as no other search surface is given).
+		typename pcl::search::KdTree<T>::Ptr tree (new pcl::search::KdTree<T>);
+		fpfh.setSearchMethod (tree);
+		
+		fpfh.setSearchSurface (this->_shape);
+		std::cout<<"Computin"<<std::endl;
+		
+		for (int i = 0; i < this->_shape_normals->points.size(); i++)
+		{
+			if (!pcl::isFinite<pcl::Normal>(this->_shape_normals->points[i]))
+			{
+				PCL_WARN("normals[%d] is not finite\n", i);
+			}
+		}
+		
+		fpfh.compute (*(this->_desc)); //pointer of desc
+	}
+	
+	virtual void compute(){
+		stalker::tic();
+		std::cout << "Normal"<<std::endl;
 
-/*#include <pcl/point_types.h>
-#include <pcl/features/fpfh.h>
 
-{
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal> ());
-
-  ... read, pass in or create a point cloud with normals ...
-  ... (note: you can create a single PointCloud<PointNormal> if you want) ...
-
-  // Create the FPFH estimation class, and pass the input dataset+normals to it
-  pcl::FPFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::FPFHSignature33> fpfh;
-  fpfh.setInputCloud (cloud);
-  fpfh.setInputNormals (normals);
-  // alternatively, if cloud is of tpe PointNormal, do fpfh.setInputNormals (cloud);
-
-  // Create an empty kdtree representation, and pass it to the FPFH estimation object.
-  // Its content will be filled inside the object, based on the given input dataset (as no other search surface is given).
-  pcl::search::KdTree<PointXYZ>::Ptr tree (new pcl::search::KdTree<PointXYZ>);
-
-  fpfh.setSearchMethod (tree);
-
-  // Output datasets
-  pcl::PointCloud<pcl::FPFHSignature33>::Ptr fpfhs (new pcl::PointCloud<pcl::FPFHSignature33> ());
-
-  // Use all neighbors in a sphere of radius 5cm
-  // IMPORTANT: the radius used here has to be larger than the radius used to estimate the surface normals!!!
-  fpfh.setRadiusSearch (0.05);
-
-  for (int i = 0; i < normals->points.size(); i++)
-{
-  if (!pcl::isFinite<pcl::Normal>(normals->points[i]))
-  {
-    PCL_WARN("normals[%d] is not finite\n", i);
-  }
-}
-  
-  
-  // Compute the features
-  fpfh.compute (*fpfhs);
-
-  // fpfhs->points.size () should have the same size as the input cloud->points.size ()*
-}*/
-
+		stalker::removeNan<T>(*(this->_shape), *(this->_shape));
+		
+		
+		stalker::estimNormal<T, NormalType>(this->_shape, this->_shape_normals, this->_k);
+		
+		
+		if(this->_shape->size()>10000){
+			std::cout << "Downsample"<<std::endl;
+			stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
+		}
+		else{
+			pcl::copyPointCloud(*(this->_shape), (*this->_shape_keypoints));
+		}
+		
+		
+		//std::cout << "Pass Through"<<std::endl;
+		
+		//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
+		
+		//std::cout << "Outlier removal"<<std::endl;
+		
+		//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
+		
+		std::cout << "compute descriptors"<<std::endl;
+		
+		this->computeDescriptors();
+		std::cout<<std::endl<<std::endl;
+		std::cout<<"Shape ";
+		stalker::toc();
+	}
+	
+};
 
 /***************CLASS FINAL**********/
 
@@ -160,29 +296,21 @@ template <typename T, typename DescriptorType>
 class ShapeLocal : public ShapeLocalBase<T, DescriptorType> {
 	private :
 
-	double _k; //Normal estimation diameter.	
+
 	//Preprocessing<T>* _prep;
 	
 	public : 	
 	ShapeLocal(const std::string& name) : 
-	ShapeLocalBase<T, DescriptorType>(name), _k(10){};
+	ShapeLocalBase<T, DescriptorType>(name){};
 	
 	ShapeLocal(const std::string& name, double sampling_size) : 
-	ShapeLocalBase<T, DescriptorType>(name, sampling_size), _k(10){};
+	ShapeLocalBase<T, DescriptorType>(name, sampling_size){};
 	
 	ShapeLocal(const std::string& name, double sampling_size, double descriptor_radius) : 
-	ShapeLocalBase<T, DescriptorType>(name, sampling_size, descriptor_radius), _k(10){};
-
-
-	virtual void setNormalEstimDiameter(double k){_k=k;}
-	virtual double getNormalEstimDiameter(){return _k;}
+	ShapeLocalBase<T, DescriptorType>(name, sampling_size, descriptor_radius){};
 
 	//update Shape state
-	
-	virtual void compute();
 	//Load a model
-	
-	virtual void estimNormal();
 
 	//PRINT
 	//Print interface
@@ -201,62 +329,6 @@ class ShapeLocal : public ShapeLocalBase<T, DescriptorType> {
 
 };
 
-
-
-template <typename T, typename DescriptorType>
-inline void ShapeLocal<T, DescriptorType>::compute(){
-	stalker::tic();
-	std::cout << "Normal"<<std::endl;
-	if(this->resol_state==true){
-		this->resolutionInvariance();
-	}
-
-	stalker::removeNan<T>(*(this->_shape), *(this->_shape));
-	this->estimNormal();
-	std::cout << "Downsample"<<std::endl;
-	
-	stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
-	
-	std::cout << "Pass Through"<<std::endl;
-	
-	//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
-	
-	std::cout << "Outlier removal"<<std::endl;
-	
-	//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
-	
-	std::cout << "compute descriptors"<<std::endl;
-	
-	this->computeDescriptors();
-	std::cout<<std::endl<<std::endl;
-	std::cout<<"Shape ";
-	stalker::toc();
-}
-
-//PROUBLEM ICI
-template <typename T, typename DescriptorType>
-inline void ShapeLocal<T, DescriptorType>::estimNormal(){
-	
-	pcl::NormalEstimationOMP<T, NormalType> norm_est2;
-	norm_est2.setKSearch (_k);
-	std::cout<<"Input cloud given"<<std::endl;
-	norm_est2.setInputCloud (this->_shape);
-	std::cout<<"compte the normals"<<std::endl;
-	try{
-		if(this->_shape->is_dense==true){
-			norm_est2.compute (*(this->_shape_normals));
-		}
-		else{
-			throw std::invalid_argument("not dense");
-		}
-	}
-	catch(std::exception const& e){
-		std::cerr << "ERREUR SHAPE is not dense : " << e.what() << std::endl;
-		exit(0);
-	}
-		
-
-}
 
 /*************SHAPE COLOR******************/
 

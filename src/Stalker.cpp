@@ -12,13 +12,12 @@
 #include "CorrespGrouping.hpp"
 #include "MainGraphic.hpp"
 
-#define Descriptor pcl::SHOT1344
+#define Descriptor pcl::Histogram<153>
 
 int main (int argc, char **argv){
 	ros::init(argc, argv, "Stalker");
 	ros::NodeHandle my_node;
 	ros::NodeHandle priv_node("~");
-
 	//Timer, Subscriber, Publisher description
 	ros::Timer _imlost;
 	ros::Subscriber pointcloud_sub;
@@ -36,10 +35,13 @@ int main (int argc, char **argv){
 	main.setPipeline(cp);
 	/*******PARAMETERS****************/
 	
-	std::string path2model;
+	std::string path2model="/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord00000.pcd";
 	priv_node.param<std::string>("/model", path2model, "none");
 	
-	main.setResolution(true);
+	
+	path2model="/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord00000.pcd";
+	
+	//main.setResolution(true);
 		
 	/*****************************************/
 	
@@ -49,6 +51,7 @@ int main (int argc, char **argv){
 	}
 	else{
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr model_pc (new pcl::PointCloud<pcl::PointXYZRGBA>);
+		pcl::io::loadPCDFile (path2model, *model_pc);
 		main.loadModel(model_pc);
 	}
 	

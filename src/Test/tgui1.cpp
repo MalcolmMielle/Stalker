@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE(trying)
 {
 	
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr object (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk.pcd", *object);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd", *object);
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/home/ros/hydro_ws/catkin_ws/src/Tobot/stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
 	
 	/*CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352>* cg = new CorrespGrouping<pcl::PointXYZRGBA, pcl::SHOT352>(new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("object"), new ShapeLocal<pcl::PointXYZRGBA, pcl::SHOT352>("scene",0.03));
 	
@@ -154,8 +154,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	mg5.doWork(smp); //UBUG
 	mg5.getPipeline()->affiche();
-	while(!mg5.stopGui()){
-		mg5.getGui()->show();
-	}
+	mg5.getGui()->show();
+	std::cout<<"end of show"<<std::endl;
 	
 }

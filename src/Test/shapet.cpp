@@ -26,9 +26,9 @@ BOOST_AUTO_TEST_CASE(trying)
 	std::cout<<"TESSSSST2"<<std::endl;
 	st.update(cloud);
 	std::cout<<"END"<<std::endl;
-	st.setRadius(3);
+	st.setRadiusDescriptors(3);
 	st.setSamplingSize(5);
-	BOOST_CHECK_EQUAL(st.getRadius(), 3);
+	BOOST_CHECK_EQUAL(st.getRadiusDescriptors(), 3);
 	BOOST_CHECK_EQUAL(st.getSamplingSize(),5);
 	
 	st2.update(cloud2);

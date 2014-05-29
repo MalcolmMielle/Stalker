@@ -2,193 +2,173 @@
 #define CORRESGROUP_RECKON_H
 
 #include "CorrespGroupingBase.hpp"
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/kdtree/impl/kdtree_flann.hpp>
-#include <pcl/correspondence.h>
-#include <pcl/recognition/cg/hough_3d.h>
-#include <pcl/recognition/cg/geometric_consistency.h>
-#include <pcl/features/board.h>
-#include <pcl/features/shot_lrf.h>
-#include <pcl/recognition/cg/geometric_consistency.h>
 
+#include <pcl/visualization/pcl_visualizer.h>
+
+/*The behavior you experienced is because when PCL transforms a point cloud into a matrix data structure used by FLANN, does so with the help of a PointRepresentation class and by default this class uses only the first 3 floats of each point unless a specialization for the new data type is provided.
+
+You can get the expected behavior for your code by adding the following specialization for DefaultPointRepresentation:
+*/
+
+namespace pcl {
+template <>
+class DefaultPointRepresentation<pcl::Histogram<153> > : public PointRepresentation<pcl::Histogram<153> >
+{
+public:
+  DefaultPointRepresentation ()
+  {
+    nr_dimensions_ = 153;
+  }
+
+  virtual void
+  copyToFloatArray (const pcl::Histogram<153>  &p, float * out) const
+  {
+    for (int i = 0; i < nr_dimensions_; ++i)
+      out[i] = p.histogram[i];
+  }
+};
+}
+
+
+/******************************************************/
+/*********************DEFAULT BASE*********************/
+/******************************************************/
 
 template <typename T, typename DescriptorTypes>
-class CorrespGrouping : public CorrespGroupingBase<T, DescriptorTypes> {
+class CorrespGrouping : public CorrespGroupingBaseBase<T, DescriptorTypes> {
 	protected: 
-	//ShapeLocal<T, pcl::SHOT352>* _object; //Don't need because it take a Shape* from main.
-	//ShapeLocal<T, pcl::SHOT352>* _scene; // Need to be initialise because it takes a Cloud in argument.
-	bool resol;
-	
-	double _rf_rad; //Referance frame radius given by the user. default 0.015
-	double _rf_rad_effective; //Referance frame radius used in the calculation. Useful in case we want to use resolution invariance.
-	double _cg_size; //Cluster size given by the user. default 0.01
-	double _cg_size_effective; //Cluster size used in the calculation. Useful in case we want to use resolution invariance.
-	double _cg_thresh; //Cluster thressold default 5
-	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > _rototranslations; //Eigen vectors. give the three vector defining the position. The smallest one is the z.
-	std::vector<pcl::Correspondences> _clustered_corrs;
-	
+
 	public : 
 		
-	CorrespGrouping(ShapeLocal<T, DescriptorTypes>* object, ShapeLocal<T, DescriptorTypes>* scene) : CorrespGroupingBase<T, DescriptorTypes>(object, scene),/* _object(object), _scene(scene),*/resol(false), _rf_rad(0.015), _cg_size(0.01), _cg_thresh(5.0) {};
-	
-	virtual void doPipeline();
-	virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy);
-	//virtual void doPipelineOld();
-	
-	//new stuff
-	virtual void setResol(bool y){resol=y;}
-	virtual void setFrameRadius(double rf){_rf_rad=rf;}
-	virtual void setClusterSize(double rf){_cg_size=rf;}
-	virtual void setClusterThresold(double rf){_cg_thresh=rf;}
-	
-	virtual double getFrameRadius(){return _rf_rad;}
-	virtual double getClusterSize(){return _cg_size;}
-	virtual double getClusterThresold(){return _cg_thresh;}
-	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >& getRoto(){return _rototranslations;}
-	std::vector<pcl::Correspondences>& getClust(){return _clustered_corrs;}
-	
-	virtual void clusteringHough();
-	virtual void resolutionInvariance();
-	//virtual void estimNormal();
-	
-	virtual void affiche();
-	virtual void printinfo(){
-		std::cout<<"INSIDE THE CLASS"<<std::endl;
-		std::cout<<"heig "<<this->_scene->getCloud()->height<<" width "<<this->_scene->getCloud()->width<<" size "<< this->_scene->getCloud()->size()<<" dense "<< this->_scene->getCloud()->is_dense<< " Organized "<<this->_scene->getCloud()->isOrganized() <<std::endl;
+	CorrespGrouping(ShapeLocal<T, DescriptorTypes>* object, ShapeLocal<T, DescriptorTypes>* scene) : CorrespGroupingBaseBase<T, DescriptorTypes>(object, scene) {
+		this->useHough();
 		
-		std::cout<<"INSIDE THE CLASS model"<<std::endl;
-		std::cout<<"heig "<<this->_object->getCloud()->height<<" width "<<this->_object->getCloud()->width<<" size "<< this->_object->getCloud()->size()<<" dense "<< this->_object->getCloud()->is_dense<<" Organized "<<this->_object->getCloud()->isOrganized() <<std::endl;
-	}
+	};
 	
-	//OVERWRITTEN FUNTION
-	virtual void print(Gui<T,DescriptorTypes>* g){
-		g->printPipeline((*this));
-	}
+	virtual void point2PointCorrespondance();
 	
-	//OVERWRITTEN FUNTION
-	//virtual void setScene(typename pcl::PointCloud<T>::Ptr& obj){this->_scene->set(obj);}
-	//virtual void setObject(typename pcl::PointCloud<T>::Ptr& obj){this->_object->set(obj);}
 
 };
 
 
+/*****FUNCTION IS OK ERROR COME FROM BEFORE ********/
 template <typename T, typename DescriptorTypes>
-inline void CorrespGrouping<T, DescriptorTypes>::doPipeline()
-{
-	if(this->_scene->getKeypoints()->height>0 && this->_scene->getKeypoints()->width>0 && this->_object->getKeypoints()->height>0 && this->_object->getKeypoints()->height>0 ){
-		std::cout<<"ENTER THE PIPELINE ************************************"<<std::endl;
-		if(resol==true){
-			std::cout << "Rosulation"<<std::endl;
-			resolutionInvariance();
+inline void CorrespGrouping<T, DescriptorTypes>::point2PointCorrespondance(){
+	
+	stalker::tic();
+	
+	pcl::KdTreeFLANN<DescriptorTypes> match_search;
+	
+	match_search.setInputCloud (this->_object->getDescr());
+	std::cout << "Scene descirptor size "<< this->_scene->getDescr()->size()<<" object descr size "<< this->_object->getDescr()->size()<< std::endl;
+	int kop=0;
+	//  For each scene keypoint descriptor, find nearest neighbor into the model keypoints descriptor cloud and add it to the correspondences vector.
+	for (size_t i = 0; i < this->_scene->getDescr()->size(); ++i){
+		std::vector<int> neigh_indices(1);
+		std::vector<float> neigh_sqr_dists(1);
+		//skipping NaNs
+		std::cout<<"i "<<i<<std::endl; 
+		if (!pcl_isfinite (this->_scene->getDescr()->at (i).descriptor[0])) {
+			continue;
 		}
-		this->point2PointCorrespondance();
-		clusteringHough();
+
+		int found_neighs = match_search.nearestKSearch (this->_scene->getDescr()->at(i), 1, neigh_indices, neigh_sqr_dists);
+		if(kop%100==0){std::cout<<"Calculating the Point to Point correspondence..."<<std::endl;}
+		//  add match only if the squared descriptor distance is less than 0.25 (SHOT descriptor distances are between 0 and 1 by design)
+		if(found_neighs == 1 && neigh_sqr_dists[0] < 0.25f) {
+			pcl::Correspondence corr (neigh_indices[0], static_cast<int> (i), neigh_sqr_dists[0]);
+			this->_model_scene_corrs->push_back (corr);
+			kop++;
+		}
+		
 	}
+	std::cout<<std::endl<<"Point 2 point correspondance grouping ";
+	stalker::toc();
+	std::cout<<"number of entries "<<kop<<std::endl;
+	std::cout << "Correspondences found: " << this->_model_scene_corrs->size() << std::endl;
 }
 
-template <typename T, typename DescriptorTypes>
-inline void CorrespGrouping<T, DescriptorTypes>::doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy){
-	typename pcl::PointCloud<T>::Ptr p(new pcl::PointCloud<T>() );
-	pcl::fromROSMsg(*cloudy, *p);
-	this->_scene->update(p);
-	//this->doPipeline();
+
+
+/******************************************************/
+/***********************SPIN IMAGE*********************/
+/******************************************************/
+
+/*Sin image
+ * Not scale invariant !
+ * 
+ */
+
+template <typename T>
+class CorrespGrouping<T, pcl::Histogram<153> > : public CorrespGroupingBaseBase<T, pcl::Histogram<153> > {
+	protected: 
 	
-}
-
-
-template <typename T, typename DescriptorTypes>
-inline void CorrespGrouping<T, DescriptorTypes>::clusteringHough(){
-	    //
-	//  Compute (Keypoints) Reference Frames only for Hough
+	public : 
+	CorrespGrouping(ShapeLocal<T, pcl::Histogram<153> >* object, ShapeLocal<T, pcl::Histogram<153> >* scene) : CorrespGroupingBaseBase<T, pcl::Histogram<153> >(object, scene) {
+		this->useGeometricConsistency();
+	};
 	
-	pcl::PointCloud<RFType>::Ptr model_rf (new pcl::PointCloud<RFType> ());
-	pcl::PointCloud<RFType>::Ptr scene_rf (new pcl::PointCloud<RFType> ());
-
-	//USED THAT IN PCL 1.7
-	pcl::BOARDLocalReferenceFrameEstimation<T, NormalType, RFType> rf_est;
-	rf_est.setFindHoles (true);
-	std::cout <<"Defining the radius at " <<_rf_rad<<std::endl; 
-	rf_est.setRadiusSearch (_rf_rad);
-
-	rf_est.setInputCloud (this->_object->getKeypoints());
-	rf_est.setInputNormals (this->_object->getNormals());
-	rf_est.setSearchSurface (this->_object->getCloud());
-	rf_est.compute (*model_rf);
-
-	rf_est.setInputCloud (this->_scene->getKeypoints());
-	rf_est.setInputNormals (this->_scene->getNormals());
-	rf_est.setSearchSurface (this->_scene->getCloud());
-	rf_est.compute (*scene_rf); 
-
-	//  Clustering
-	pcl::Hough3DGrouping<T, T, RFType, RFType> clusterer; //undefined reference in .o
-	clusterer.setHoughBinSize (_cg_size);
-	clusterer.setHoughThreshold (_cg_thresh);
-	clusterer.setUseInterpolation (true);
-	clusterer.setUseDistanceWeight (false);
-
-	clusterer.setInputCloud (this->_object->getKeypoints());
-	clusterer.setInputRf (model_rf);
-	clusterer.setSceneCloud (this->_scene->getKeypoints());
-	clusterer.setSceneRf (scene_rf);
-	clusterer.setModelSceneCorrespondences (this->_model_scene_corrs);
-
-	//clusterer.cluster (clustered_corrs);
-	clusterer.recognize (_rototranslations, _clustered_corrs);
-	/*
-	pcl::GeometricConsistencyGrouping<T, T> gc_clusterer;
-	gc_clusterer.setGCSize (_cg_size);
-	gc_clusterer.setGCThreshold (_cg_thresh);
-
-	gc_clusterer.setInputCloud (this->_object->getKeypoints());
-	gc_clusterer.setSceneCloud (this->_scene->getKeypoints());
-	gc_clusterer.setModelSceneCorrespondences (this->_model_scene_corrs);
-
-	//gc_clusterer.cluster (clustered_corrs);
-	gc_clusterer.recognize (_rototranslations, _clustered_corrs);*/
-
-}
+	virtual void point2PointCorrespondance();
+	
+};
 
 
+/*****FUNCTION IS OK ERROR COME FROM BEFORE ********/
+template <typename T>
+inline void CorrespGrouping<T, pcl::Histogram<153> >::point2PointCorrespondance(){
+		
+	//declare variables for Kd tree search
+	
+	 //TODO change that for a better Kd tree search for high dimension. I.E = KDTreeIndex !
+	 
+	 //  pcl::KdTreeFLANN wraps flann::KDTreeSingleIndex which is optimized for low dimensional exact search and is not ideal for 153 dimensional descriptors. For high dimensional points you should be using an approximate nearest neighbor index from FLANN, such as flann::KDTreeIndex or flann::KMeansIndex
+	 
+	pcl::KdTreeFLANN<pcl::Histogram<153> > match_search;
+	
+	int match = 0;
+	int temp_dist2NN;
+	pcl::Histogram<153> searchFeature;
 
-template <typename T, typename DescriptorTypes>
-inline void CorrespGrouping<T, DescriptorTypes>::resolutionInvariance(){
+	//search for 2NN and check for ratio threshold
+	int K = 2;
+	std::vector<int> pointIdxNKNSearch(K);
+	std::vector<float> pointNKNSquaredDistance(K);
 
-//static_cast<float> (computeCloudResolution (this->_shape));
-	//ATTENTION CHECK QUE CA A ETE FAIT CHEZ SHAPE !!!
-	if (this->_scene->getResolutionState()==true && this->_object->getResolutionState()==true)
+	//initilization for kd-tree
+	match_search.setInputCloud (this->_object->getDescr());
+
+	//compare each query point with each scene point
+	int numFoundMatches;
+	for (size_t c = 0; c < this->_scene->getDescr()->size(); c++)
 	{
-		double resolution=this->_object->getResolution();
-		//this->_shape_ss   *= resolution;
-		this->_rf_rad_effective = _rf_rad*resolution;
-		//this->_descrRad  *= resolution;
-		this->_cg_size_effective = _rf_rad*resolution;
+		searchFeature = this->_scene->getDescr()->points.at(c);
+
+		if(std::isnan(searchFeature.histogram[0])){
+			continue;
+		}
+
+		numFoundMatches = match_search.nearestKSearch(searchFeature,K,pointIdxNKNSearch,pointNKNSquaredDistance);
+
+		if(numFoundMatches>0){
+			temp_dist2NN = pointNKNSquaredDistance.at(0);
+
+		}
+		if (temp_dist2NN<0.25f){
+			match++;
+			pcl::Correspondence corr (pointIdxNKNSearch[0], static_cast<int> (c), pointNKNSquaredDistance[0]);
+			this->_model_scene_corrs->push_back (corr);
+		}
+
+		std::cout<<"point " <<c<<" in query matches point "<<pointIdxNKNSearch.at(0)<<" in database."<<std::endl;
 	}
+	//show status
+	std::cout<<"total match:"<<match<<std::endl;
 
 }
 
 
-template <typename T, typename DescriptorTypes>
-inline void CorrespGrouping<T, DescriptorTypes>::affiche()
-{
-	std::cout << "Model instances found: " << _rototranslations.size () << std::endl;
-	for (size_t i = 0; i < _rototranslations.size (); ++i)
-	{
-		std::cout << "\n    Instance " << i + 1 << ":" << std::endl;
-		std::cout << "        Correspondences belonging to this instance: " << _clustered_corrs[i].size () << std ::endl;
 
-		// Print the rotation matrix and translation vector
-		Eigen::Matrix3f rotation = _rototranslations[i].block<3,3>(0, 0);
-		Eigen::Vector3f translation = _rototranslations[i].block<3,1>(0, 3);
 
-		printf ("\n");
-		printf ("            | %6.3f %6.3f %6.3f | \n", rotation (0,0), rotation (0,1), rotation (0,2));
-		printf ("        R = | %6.3f %6.3f %6.3f | \n", rotation (1,0), rotation (1,1), rotation (1,2));
-		printf ("            | %6.3f %6.3f %6.3f | \n", rotation (2,0), rotation (2,1), rotation (2,2));
-		printf ("\n");
-		printf ("        t = < %0.3f, %0.3f, %0.3f >\n", translation (0), translation (1), translation (2));
-	}
-}
 
 
 #endif

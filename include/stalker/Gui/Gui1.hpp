@@ -6,6 +6,7 @@
 #include "Gui.hpp"
 #include "Shape3DLocal.hpp"
 #include "CorrespGrouping.hpp"
+#include "CorrespGroupingBase.hpp"
 template <typename T, typename DescriptorType>
 class Gui1 : public Gui<T, DescriptorType>{
 	
@@ -15,6 +16,7 @@ class Gui1 : public Gui<T, DescriptorType>{
 	Gui1() : 
 	Gui<T, DescriptorType>(), 
 	scene_keypoints_color_handler(typename pcl::PointCloud<T>::Ptr(new pcl::PointCloud<T>()), 0, 0, 255){}
+
 	
 	
 	virtual void update(ShapeLocal<T, DescriptorType>& sh){
@@ -43,7 +45,7 @@ class Gui1 : public Gui<T, DescriptorType>{
 		this->viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, name);
 	}
 	
-	virtual void printPipeline(CorrespGrouping<T, DescriptorType>& sh){
+	virtual void printPipeline(CorrespGroupingBaseBase<T, DescriptorType>& sh){
 		
 		typename pcl::PointCloud<T>::Ptr off_scene_model_keypoints (new pcl::PointCloud<T> ());
 
@@ -57,6 +59,7 @@ class Gui1 : public Gui<T, DescriptorType>{
 		
 		typename pcl::PointCloud<T>::Ptr scene = sh.getScene()->getCloud();
 		typename pcl::PointCloud<T>::Ptr scene_keypoints=sh.getScene()->getKeypoints();
+		std::cout << "Model instances found by GUI1: " << rototranslations.size () << std::endl;
 		
 		for (size_t i = 0; i < rototranslations.size (); ++i)
 		{
@@ -68,7 +71,7 @@ class Gui1 : public Gui<T, DescriptorType>{
 
 			pcl::visualization::PointCloudColorHandlerCustom<T> rotated_model_color_handler (rotated_model, 255, 0, 0);
 			this->viewer->addPointCloud (rotated_model, rotated_model_color_handler, ss_cloud.str ());
-
+			std::cout << "Model_not instances found by GUI1: " << clustered_corrs[i].size () << std::endl;
 			for (size_t j = 0; j < clustered_corrs[i].size (); ++j)
 			{
 				std::stringstream ss_line;

@@ -11,6 +11,7 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/keypoints/uniform_sampling.h>
+#include <pcl/features/normal_3d_omp.h>
 #include <time.h>
 
 namespace stalker
@@ -86,6 +87,27 @@ namespace stalker
 		pcl::copyPointCloud (*cloud, sampled_indices.points, *cloud_out);
 		
 		std::cout << "Shape total points: " << cloud->size () << "; Selected Keypoints: " << cloud_out->size () << std::endl;
+	}
+	
+	
+	template <typename T, typename NormalType_template>
+	void estimNormal(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<NormalType_template>::Ptr cloud_out, double _k){
+
+		pcl::NormalEstimationOMP<T, NormalType_template> norm_est2;
+		norm_est2.setKSearch (_k);
+		norm_est2.setInputCloud (cloud);
+		std::cout<<"compte the normals"<<std::endl;
+		try{
+			if(cloud->is_dense==true){
+				norm_est2.compute (*(cloud_out));
+			}
+			else{
+				throw std::invalid_argument("not dense");
+			}
+		}
+		catch(std::exception const& e){
+			std::cerr << "ERREUR SHAPE is not dense : " << e.what() << std::endl;
+		}
 	}
 
 	/*Function calculating the resolution of a point cloud. The resolution is high when the concentration of point is small and small when the concentration of poitns is high.*/
@@ -174,147 +196,25 @@ namespace stalker
 		
 	}
 
+	//TODO
+	template<typename T>
+	double minCloud(typename pcl::PointCloud<T>::Ptr p, std::string axis){
+		int min = -1;
+		if(axis.compare("x")==0){ 
+			
+		}
+		if(axis.compare("y")==0){
+			
+		}
+		if(axis.compare("z")==0){
+			
+		}
+		return min;
+	}
+	
+	
+	
 }
 
-/*template<typename T>
-class Preprocessing{
-	protected : 
-	typename pcl::PointCloud<T>::Ptr _input; //Last Scene receive
-	typename pcl::PointCloud<T>::Ptr _output; //Last Object receive
-	double _shape_ss; //shape_sampling size
-	
-	public : 
-	Preprocessing() : _input(new pcl::PointCloud<T>()),_output(new pcl::PointCloud<T>()) {};
-	
-	//******µµµµAccesseur***********
-	virtual typename pcl::PointCloud<T>::Ptr getInput(){return _input;}
-	virtual typename pcl::PointCloud<T>::Ptr getOutput(){return _output;}
-	virtual void setInput(typename pcl::PointCloud<T>::Ptr in){_input=in;}
-	virtual void setOutput(typename pcl::PointCloud<T>::Ptr out){_output=out;}
-	virtual void setSamplingSize(double r){_shape_ss=r;}
-	virtual double getSamplingSize(){return _shape_ss;}
-	
-	//*********************Main functionù*****************
-	virtual void doPreprocessing(typename pcl::PointCloud<T>& cloud, typename pcl::PointCloud<T>& cloud_out)=0;
-	
-	
-	//**********************Actions*********************
-	
-	virtual void removeNan(typename pcl::PointCloud<T>& cloud, typename pcl::PointCloud<T>& cloud_out){
-		std::vector<int> indices;
-		//THIS DOES NOT COMPULE WITH is_dense set at true ! Since it is set as true by ROS (Whyyyyyy) I have to change it manually...
-		pcl::removeNaNFromPointCloud(cloud,cloud_out, indices);
-	}
-	virtual void removeNan(){
-		std::vector<int> indices;
-		//THIS DOES NOT COMPULE WITH is_dense set at true ! Since it is set as true by ROS (Whyyyyyy) I have to change it manually...
-		pcl::removeNaNFromPointCloud(*_input, *_output, indices);
-	}
-	
-	//BUGGED !
-	virtual void removeNanNormals(typename pcl::PointCloud<T>& cloud, typename pcl::PointCloud<T>& cloud_out){
-		std::vector<int> indices;
-		//pcl::removeNaNNormalsFromPointCloud(*cloud,*cloud_out, indices);
-	}
-	virtual void removeNanNormals(){
-		std::vector<int> indices;
-		//pcl::removeNaNNormalsFromPointCloud(*cloud,*cloud, indices);
-	}
-	
-	virtual void passThrough(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, const std::string& axis, int limits1, int limits2){
-		pcl::PassThrough<T> pass_x;
-		pass_x.setInputCloud (cloud);
-		pass_x.setFilterFieldName (axis);
-		pass_x.setFilterLimits (limits1, limits2);	
-		//pass_x.setFilterLimitsNegative (true);
-		pass_x.filter (*cloud_out);
-	}
-	
-	/*Pass through filter**
-	virtual void passThrough(const std::string& axis, int limits1, int limits2){
-		pcl::PassThrough<T> pass_x;
-		pass_x.setInputCloud (_input);
-		pass_x.setFilterFieldName (axis);
-		pass_x.setFilterLimits (limits1, limits2);	
-		//pass_x.setFilterLimitsNegative (true);
-		pass_x.filter (*_output);
-	}
-	
-	/*Outlier removal**
-	virtual void statisticalOutilerRemoval(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, int nneighbor, double thresh){
-		pcl::StatisticalOutlierRemoval<T> sor;
-		sor.setInputCloud (cloud);
-		sor.setMeanK (nneighbor);
-		sor.setStddevMulThresh (thresh);
-		sor.filter (*cloud_out);
-	}
-	
-	/*DownSample*
-	virtual void downSample(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, double radius){
-		pcl::PointCloud<int> sampled_indices;
-
-		pcl::UniformSampling<T> uniform_sampling;
-		uniform_sampling.setInputCloud (cloud);
-		uniform_sampling.setRadiusSearch (radius);
-		uniform_sampling.compute (sampled_indices);
-		pcl::copyPointCloud (*cloud, sampled_indices.points, *cloud_out);
-		
-		std::cout << "Shape total points: " << cloud->size () << "; Selected Keypoints: " << cloud_out->size () << std::endl;
-	}
-	
-	
-	//************************TESTS*********************
-	
-	virtual bool gotnanTEST(const typename pcl::PointCloud<T>& cloud){
-		if (cloud.isOrganized ()){
-			for(int x=0;x<cloud.width;++x){
-				for(int y=0;y<cloud.height;++y){
-					T point(cloud[y+(x*cloud.width)]);
-					if(isnan(point.x) || isnan(point.y) || isnan(point.z)){
-						std::cout<<"ERROR AT "<<x<<" "<<y<<" WITH "<<point.x<<" "<<point.y<<" "<<point.z<<std::endl;
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-		else{
-			for(int x=0;x<cloud.width;++x){
-				T point(cloud[x]);
-				if(isnan(point.x) || isnan(point.y) || isnan(point.z)){
-					std::cout<<"ERROR AT "<<x<<" WITH "<<point.x<<" "<<point.y<<" "<<point.z<<std::endl;
-					return true;
-				}
-			}
-			return false;	
-		}
-	}
-	
-	virtual bool gotinfTEST(const typename pcl::PointCloud<T>& cloud){
-		std::cout<<"testing infs"<<std::endl;
-		if (cloud.isOrganized ()){
-			for(int x=0;x<cloud.width;++x){
-				for(int y=0;y<cloud.height;++y){
-					T point(cloud[y+(x*cloud.width)]);
-					if(isinf(point.x) || isinf(point.y) || isinf(point.z)){
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-		else{
-			for(int x=0;x<cloud.width;++x){
-				T point(cloud[x]);
-				if(isnan(point.x) || isnan(point.y) || isnan(point.z)){
-					std::cout<<"ERROR AT "<<x<<" WITH "<<point.x<<" "<<point.y<<" "<<point.z<<std::endl;
-					return true;
-				}
-			}
-			return false;	
-		}
-		
-	}
-};*/
 
 #endif
