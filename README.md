@@ -78,6 +78,10 @@ Here is a list of them :
 * Pipeline : 
   + CorrespondenceGrouping
   
+CorrespondenceGrouping comes with to way of doing Point to Point correspondance : Hough Clustering or Geometric Consistency.
+  
+As well, I'll had that if you're using CorrespondenceGrouping, there is PostProcessing actions performed at the end. It is simply an ICP that is perform and the result is calculated depending on the fitness. Usually a fitness of 1e-7 could be considered ok. You can choose to keep only the best result or all the "good enough" results.
+  
 
 Nodes
 ========
