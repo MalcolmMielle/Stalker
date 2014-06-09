@@ -73,7 +73,7 @@ Here is a list of them :
   + SHOT352
   + SHOT1337 : Color information.
   + SpinImage
-  + FPFH (not tested !)
+  + FPFH (not tested !) 
 
 * Pipeline : 
   + CorrespondenceGrouping
