@@ -144,67 +144,67 @@ add_definitions(${PCL_DEFINITIONS})
 #add_executable(guit src/Test/gui.cpp)
 #target_link_libraries(guit gui basic 3Dreckon ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(st src/Test/shapet.cpp)
-#target_link_libraries(st ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(st src/Test/shapet.cpp)
+target_link_libraries(st ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(coresgroupt src/Test/coresgroupt.cpp)
-#target_link_libraries(coresgroupt ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(coresgroupt src/Test/coresgroupt.cpp)
+target_link_libraries(coresgroupt ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(hough_spin src/Test/hough.cpp)
-#target_link_libraries(hough_spin ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(hough_spin src/Test/hough.cpp)
+target_link_libraries(hough_spin ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(downsampltest src/Test/downsamplingtest.cpp)
-#target_link_libraries(downsampltest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(downsampltest src/Test/downsamplingtest.cpp)
+target_link_libraries(downsampltest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(hough_shot src/Test/hough_shot.cpp)
-#target_link_libraries(hough_shot ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(hough_shot src/Test/hough_shot.cpp)
+target_link_libraries(hough_shot ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(tcorsptuto src/Test/testcorresp.cpp)
-#target_link_libraries(tcorsptuto ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(tcorsptuto src/Test/testcorresp.cpp)
+target_link_libraries(tcorsptuto ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(tnormal src/Test/pcl_normal_test.cpp)
-#target_link_libraries(tnormal ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(tnormal src/Test/pcl_normal_test.cpp)
+target_link_libraries(tnormal ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(maint src/Test/main.cpp)
-#target_link_libraries(maint ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(maint src/Test/main.cpp)
+target_link_libraries(maint ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(tgui1 src/Test/tgui1.cpp)
-#target_link_libraries(tgui1 ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+add_executable(tgui1 src/Test/tgui1.cpp)
+target_link_libraries(tgui1 ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-#add_executable(stalker_node src/Stalker.cpp)
-#target_link_libraries(stalker_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_executable(stalker_node src/Stalker.cpp)
+target_link_libraries(stalker_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
 add_executable(stalker_node_tld src/Stalker_TLD.cpp)
 target_link_libraries(stalker_node_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-#add_executable(create_model src/CreateModel.cpp)
-#target_link_libraries(create_model ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_executable(create_model src/CreateModel.cpp)
+target_link_libraries(create_model ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-#add_executable(stalker_node_nogui src/StalkerNonGraphic.cpp)
-#target_link_libraries(stalker_node_nogui ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_executable(stalker_node_nogui src/StalkerNonGraphic.cpp)
+target_link_libraries(stalker_node_nogui ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-#add_executable(sendimg src/Test/sendimg.cpp)
-#target_link_libraries(sendimg ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_executable(sendimg src/Test/sendimg.cpp)
+target_link_libraries(sendimg ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-#add_executable(preprotest src/Test/preprotest.cpp)
-#target_link_libraries(preprotest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework )
+add_executable(preprotest src/Test/preprotest.cpp)
+target_link_libraries(preprotest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework )
 
-#add_executable(sharedp src/Test/sharp.cpp)
-#target_link_libraries(sharedp ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework )
+add_executable(sharedp src/Test/sharp.cpp)
+target_link_libraries(sharedp ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework )
 
-#add_executable(prep_node src/Test/preprocess_node.cpp)
-#target_link_libraries(prep_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_executable(prep_node src/Test/preprocess_node.cpp)
+target_link_libraries(prep_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-#add_executable(prep_nodev2 src/Test/preprocess_nodev2.cpp)
-#target_link_libraries(prep_nodev2 ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_executable(prep_nodev2 src/Test/preprocess_nodev2.cpp)
+target_link_libraries(prep_nodev2 ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-#add_executable(shape_node src/Test/shape_node.cpp)
-#target_link_libraries(shape_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_executable(shape_node src/Test/shape_node.cpp)
+target_link_libraries(shape_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
-#add_executable(testnormalnan src/Test/testnormalnan.cpp)
-#target_link_libraries(testnormalnan ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_executable(testnormalnan src/Test/testnormalnan.cpp)
+target_link_libraries(testnormalnan ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
-## Add cmake target dependencies of the executable/library
+# Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(stalker_node stalker_generate_messages_cpp)
 

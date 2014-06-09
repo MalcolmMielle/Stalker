@@ -64,18 +64,33 @@ With this repository, you'll find different class, descriptors and Pipeline.
 Here is a list of them :
 
 * Class : 
-+ ShapeLocal : Shape implementing local descriptors
-+ ShapeModelSlowCalculation : shape implementing local descriptors. Same as ShapeLocal but the downsample is better since we are using the Uniform Grid as describe in **A New Method for Cloud Data Reduction Using Uniform Grids** by __Zhao Sanyuan, Li Fengxia, Liu Yongmei, Rao Yonghui__. Thus the calculation are slower. It's useful if the model is never going to change in time.
-+ MainGraphic : Graphic version of the Main class
-+ Gui1 : First extremely simple version of a Gui.
+  + ShapeLocal : Shape implementing local descriptors
+  + ShapeModelSlowCalculation : shape implementing local descriptors. Same as ShapeLocal but the downsample is better since we are using the Uniform Grid as describe in **A New Method for Cloud Data Reduction Using Uniform Grids** by __Zhao Sanyuan, Li Fengxia, Liu Yongmei, Rao Yonghui__. Thus the calculation are slower. It's useful if the model is never going to change in time.
+  + MainGraphic : Graphic version of the Main class
+  + Gui1 : First extremely simple version of a Gui.
 
 * Descriptors : 
-+ SHOT352
-+ SHOT1337 : Color information.
-+ SpinImage
-+ FPFH (not tested !)
+  + SHOT352
+  + SHOT1337 : Color information.
+  + SpinImage
+  + FPFH (not tested !)
 
 * Pipeline : 
-+ CorrespondenceGrouping
+  + CorrespondenceGrouping
+  
+
+Nodes
+========
+
+Here is a description of all the nodes available : 
+
+* Create model => Node that take a point cloud in input and save it as a pcd file(__view_model.pcd__) which is going to be used as a model.
+* Stalker_node => Basic node that use a given pipeline and given shape type to do object recognition. The model can be taken from either a file or a point Cloud topic.
+* Stalker_node_nogui => Same without the GUI.
+* Stalker_node_tld => Stalker node working in tandem with ros_open_tld. When open_tld found a model, it uses the bouding box to search for the object inside of it, drastically speeding up the process. If open_tld is lost, then it uses the full point cloud from the Kinect to search for the object. As sound as it has been found it sent a new bouding box to open_tld (still needs to be done !)
+
+
+
+
 
 
