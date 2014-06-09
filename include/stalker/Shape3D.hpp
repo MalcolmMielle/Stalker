@@ -14,7 +14,6 @@
 #include <pcl/point_types.h>
 
 #include <pcl/keypoints/uniform_sampling.h>
-#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/io/pcd_io.h>
 #include <exception>
 #include "Gui.hpp"

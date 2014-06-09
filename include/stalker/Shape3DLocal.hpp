@@ -122,11 +122,9 @@ class ShapeLocalBase<T, pcl::SHOT1344> : public Shape<T, pcl::SHOT1344>{
 		std::cout << "Normal"<<std::endl;
 
 		stalker::removeNan<T>(*(this->_shape), *(this->_shape));
-		
-		
 		stalker::estimNormal<T, NormalType>(this->_shape, this->_shape_normals, this->_k);
 		
-		if(this->_shape->size()>10000){
+		if(this->_shape->size()>1000){
 			std::cout << "Downsample"<<std::endl;
 			stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
 		}
@@ -134,14 +132,8 @@ class ShapeLocalBase<T, pcl::SHOT1344> : public Shape<T, pcl::SHOT1344>{
 			pcl::copyPointCloud(*(this->_shape), (*this->_shape_keypoints));
 		}
 		
-		
-		std::cout << "Pass Through"<<std::endl;
-		
+		//std::cout << "Pass Through"<<std::endl;		
 		//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
-		
-		std::cout << "Outlier removal"<<std::endl;
-		
-		//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
 		
 		std::cout << "compute descriptors"<<std::endl;
 		
@@ -182,7 +174,7 @@ class ShapeLocalBase<T, pcl::Histogram<153> > : public Shape<T,  pcl::Histogram<
 
 		stalker::removeNan<T>(*(this->_shape), *(this->_shape));
 		
-		if(this->_shape->size()>10000){
+		if(this->_shape->size()>1000){
 			std::cout << "Downsample"<<std::endl;
 			stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
 		}
@@ -196,10 +188,6 @@ class ShapeLocalBase<T, pcl::Histogram<153> > : public Shape<T,  pcl::Histogram<
 		//std::cout << "Pass Through"<<std::endl;
 		
 		//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
-		
-		//std::cout << "Outlier removal"<<std::endl;
-		
-		//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
 		
 		std::cout << "compute descriptors"<<std::endl;
 
@@ -257,28 +245,19 @@ class ShapeLocalBase<T, pcl::FPFHSignature33 > : public Shape<T,  pcl::FPFHSigna
 		std::cout << "Normal"<<std::endl;
 
 
-		stalker::removeNan<T>(*(this->_shape), *(this->_shape));
-		
-		
+		stalker::removeNan<T>(*(this->_shape), *(this->_shape));	
 		stalker::estimNormal<T, NormalType>(this->_shape, this->_shape_normals, this->_k);
 		
-		
-		if(this->_shape->size()>10000){
+		if(this->_shape->size()>1000){
 			std::cout << "Downsample"<<std::endl;
 			stalker::downSample<T>(this->_shape, this->_shape_keypoints, this->_shape_ss_effective);
 		}
 		else{
 			pcl::copyPointCloud(*(this->_shape), (*this->_shape_keypoints));
 		}
-		
-		
-		//std::cout << "Pass Through"<<std::endl;
-		
+				
+		//std::cout << "Pass Through"<<std::endl;	
 		//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
-		
-		//std::cout << "Outlier removal"<<std::endl;
-		
-		//stalker::statisticalOutilerRemoval<T>(this->_shape_keypoints, this->_shape_keypoints, 50, 1.0);
 		
 		std::cout << "compute descriptors"<<std::endl;
 		
@@ -328,9 +307,6 @@ class ShapeLocal : public ShapeLocalBase<T, DescriptorType> {
 	}
 
 };
-
-
-/*************SHAPE COLOR******************/
 
 
 

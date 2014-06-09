@@ -15,7 +15,7 @@ The stalker is an interface made to use 3D Real Time recognition algorithms unde
 
 You can find in this directory an UML of the Stalker so it's easy for you to use he interface to adapt it in your own code.
 
-Globally, the Stalker is ensemble of three class : 
+Globally, the Stalker is ensemble of three *main* class : 
 
 * Shape
 * Main
@@ -51,4 +51,31 @@ Main and Pipeline interface
 You can use two different interfaces. One use only one scene and one model to compute while the other one use a vector of both.
 This allow you to choose if you need to find multiple models or not for example. Or if you have multiple scene (we never know you could have multiples camera). I let the "old" implementation with one scene and one model because it might be faster depending on the usage. To choose which interface to use just go in the _doWork()_ function of __Main__ and either use _addScene()_ and _addObject()_ to use the vector interface or _setScene()_ and _setObject()_ if you want to use the "only one model and scene" interface.
 
+WARNING : the vector interface is totally experimental and buggy for now since I hadn't had to use it. Especially when used with a graphical interface, it need to be tested and revised !!
+
 Like this, _Pipeline_ receive only __Shapes__
+
+
+Examples
+========
+
+With this repository, you'll find different class, descriptors and Pipeline.
+
+Here is a list of them :
+
+* Class : 
++ ShapeLocal : Shape implementing local descriptors
++ ShapeModelSlowCalculation : shape implementing local descriptors. Same as ShapeLocal but the downsample is better since we are using the Uniform Grid as describe in **A New Method for Cloud Data Reduction Using Uniform Grids** by __Zhao Sanyuan, Li Fengxia, Liu Yongmei, Rao Yonghui__. Thus the calculation are slower. It's useful if the model is never going to change in time.
++ MainGraphic : Graphic version of the Main class
++ Gui1 : First extremely simple version of a Gui.
+
+* Descriptors : 
++ SHOT352
++ SHOT1337 : Color information.
++ SpinImage
++ FPFH (not tested !)
+
+* Pipeline : 
++ CorrespondenceGrouping
+
+

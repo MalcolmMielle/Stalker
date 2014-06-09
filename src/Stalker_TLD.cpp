@@ -15,58 +15,71 @@
 #include "Postprocessing.hpp"
 
 
-#define Descriptor pcl::SHOT1344
+#define Descriptor pcl::Histogram<153>
 #define PointType pcl::PointXYZRGBA
 
 
 
 
-void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle& my_node, Main<PointType, Descriptor >* main){
+void saveCloud(const sensor_msgs::PointCloud2ConstPtr& cloudy, pcl::PointCloud<PointType>::Ptr cloud){
+	 pcl::fromROSMsg(*cloudy, *cloud); 
+}
+
+
+
+
+void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle& my_node, Main<PointType, Descriptor >* main, ros::Publisher& bb_pub, ros::Publisher& pose_pub, pcl::PointCloud<PointType>::Ptr cloud){
 	if( ros::Time::now()-timestamp>ros::Duration(10)){
 		std::cout<<"************************************* Opent TLD did NOT found a Model********************************"<<std::endl;
-		ros::Subscriber trackertemp;
 		
-		//TODO FIX THAT
-			//stalker::passThrough<T>(_scene, _scene, "z", 0.8, 3.5);
-	//stalker::statisticalOutilerRemoval<T>(_scene, _scene, 50, 1.0);
-		trackertemp = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, &Main<PointType, Descriptor >::doWork, main);
-		ros::spinOnce();
+		/*Preprocessing here...*/
+		
+		stalker::passThrough<PointType>(cloud, cloud, "z", 0.8, 3.5);
+		stalker::statisticalOutilerRemoval<PointType>(cloud, cloud, 50, 1.0);
+		
+		main->doWork(cloud);
+		
+		if(main->foundObject()){
+		//publish the new bouding box
+			//bb_pub.publish<>();
+			//pose_pub.publish<>();
+		}
+		
 	}
 	
 	
 }
 
-void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main){
+void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub){
 	
 	std::cout<<"************************************* Opent TLD got a Model********************************"<<std::endl;
 
 	if(main->gotModel()){
 		pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
-		pcl::PointCloud<PointType>::Ptr _scene_resize(new pcl::PointCloud<PointType>() );
 		_scene->is_dense=false;
-		_scene_resize->is_dense=false;
 		pcl::fromROSMsg(*cloudy, *_scene);
 		//TODO
-		double factor=1;
-		stalker::resize<PointType>(_scene, _scene_resize, factor);
+		stalker::resizeCloud<PointType>(main->getObject(), _scene);
+		
+		stalker::center<PointType>(main->getObject(), "x");
+		stalker::center<PointType>(main->getObject(), "y");
+		stalker::center<PointType>(main->getObject(), "z");
+		
+		stalker::voirPCL<PointType>(main->getObject(), _scene);
 		
 		sensor_msgs::PointCloud2Ptr pc2(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*_scene_resize, *pc2);
+		pcl::toROSMsg(*_scene, *pc2);
 		
 		/*sensor_msgs::PointCloud2 pc2;
 		pcl::toROSMsg(*cloud_filtered, pc2);*/
 		
 		main->doWork(pc2);
-	}
-	else{
-		pcl::PointCloud<PointType>::Ptr model(new pcl::PointCloud<PointType>() );
-		pcl::fromROSMsg(*cloudy, *model);
-		pcl::transformPointCloud (*model, *model, Eigen::Vector3f (-1,0,0), Eigen::Quaternionf (1, 0, 0, 0));
-		stalker::passThrough<PointType>(model, model, "z", 0.8, 2);
-		int a = pcl::io::savePCDFileBinary("view_model.pcd", *model);
-		sensor_msgs::PointCloud2Ptr pc2(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*model, *pc2);
-		main->loadModel(pc2);
+		
+		if(main->foundObject()){
+		//publish the new bouding box
+			//pose_pub.publish<>();
+		}
+		
 	}
 	
 	timestamp=ros::Time::now();
@@ -84,10 +97,16 @@ int main (int argc, char **argv){
 	ros::Subscriber model_sub;
 	ros::Subscriber pc_filtered_sub;
 	ros::Subscriber tracker2d_sub;
+	ros::Subscriber trackerfullcloud;
+	
+	
 	ros::Publisher pose_pub;
 	ros::Publisher newBB_pub;
+	
 	ros::Timer bomb;
 	ros::Time timeStamp=ros::Time::now();
+	
+	pcl::PointCloud<PointType>::Ptr cloudy_save;
 	
 	MainGraphic<PointType, Descriptor > main;
 	
@@ -102,21 +121,22 @@ int main (int argc, char **argv){
 	//priv_node.param<std::string>("/model", path2model, "none");
 	
 	//main.setResolution(true);
-	/* SPIN IMAGE
+	/* SPIN IMAGE*/
 	cp->setPostProcICPThresh(1e-7);
 	cp->getObject()->setRadiusDescriptorsEffective(0.05);
 	cp->getScene()->setRadiusDescriptorsEffective(0.05);
 	cp->getObject()->setSamplingSizeEffective(0.01);
-	cp->getScene()->setSamplingSizeEffective(0.01);*/
-		
-	cp->setPostProcICPThresh(1e-7);
+	cp->getScene()->setSamplingSizeEffective(0.01);
+	
+	/*SHOT*/	
+	/*cp->setPostProcICPThresh(1e-7);
 	//cp->getObject()->setRadiusDescriptorsEffective(0.03);
 	//cp->getScene()->setRadiusDescriptorsEffective(0.05);
-	cp->getObject()->setSamplingSizeEffective(0.001);
-	cp->getScene()->setSamplingSizeEffective(0.001);
+	cp->getObject()->setSamplingSizeEffective(0.005);
+	cp->getScene()->setSamplingSizeEffective(0.005);*/
 	
+	cp->setAlwaysSeeBest();
 	cp->useGeometricConsistency();
-	
 	
 	/*****************************************/
 	
@@ -132,9 +152,11 @@ int main (int argc, char **argv){
 	}
 	
 	/***********CAMERA IMAGE*********/
-	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main) );
+	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub) );
 
-	bomb=my_node.createTimer(ros::Duration(10), boost::bind(bombCallBack, _1, timeStamp, my_node, &main));
+	bomb=my_node.createTimer(ros::Duration(10), boost::bind(bombCallBack, _1, timeStamp, my_node, &main, newBB_pub, pose_pub, cloudy_save));
+	
+	trackerfullcloud = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, boost::bind(saveCloud, _1,cloudy_save));
 	
 
 	while(ros::ok()){		

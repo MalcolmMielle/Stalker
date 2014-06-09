@@ -38,6 +38,7 @@ class Pipeline{
 	
 	virtual void doPipeline() = 0;
 	virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy) = 0;
+	virtual bool foundObject()=0;
 	
 	virtual void setMaxObject(int i){
 		try{

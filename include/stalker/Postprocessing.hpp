@@ -11,6 +11,7 @@
 #include <pcl/registration/sample_consensus_prerejective.h>
 #include <time.h>
 #include <Shape3D.hpp>
+#include <pcl/visualization/pcl_visualizer.h>
 
 
 /*Typical cues are the percentage of supporting points (i.e., model points that are close to scene points), as well as the percentage of outliers (number of visible points belonging to the models that do not have a counterpart within the scene points). Currently, PCL contains an implementation of the hypothesis verification algorithm proposed in [13]. Figure 3 shows an example where the recognition hypotheses are postprocessed using this method. Other verification strategies have been proposed in the literature
@@ -36,40 +37,6 @@ namespace stalker{
 	}
 	
 	
-	template<typename T>
-		void resize(typename pcl::PointCloud<T>::Ptr cloud_in, typename pcl::PointCloud<T>::Ptr cloud_out, double factor){
-		try{
-			if(factor<0){
-				throw std::invalid_argument("Factor < 0");
-			}
-		}
-		catch(std::exception const& e){
-			std::cerr << "Erreur in resize  : " << e.what() << std::endl;
-			factor=1;
-		}
-		
-		pcl::copyPointCloud(*cloud_in, *cloud_out);
-			
-		if (cloud_out->isOrganized()) {
-			for (int h=0; h<cloud_out->height; h++) {
-				for (int w=0; w<cloud_out->width; w++) {
-					cloud_out->at(w,h).x = cloud_out->at(w, h).x*factor;
-					cloud_out->at(w,h).y = cloud_out->at(w, h).y*factor;
-					cloud_out->at(w,h).z = cloud_out->at(w, h).z*factor;
-				}
-			}
-		}
-		else{
-			std::cerr << "Cloud not organized, can't apply the function : " <<cloud_in->width<<" "<<cloud_in->height<<" "<<cloud_out->width<<" "<<cloud_out->height<< std::endl;
-			for (int h=0; h<cloud_out->width; h++) {
-				cloud_out->points[h].x = cloud_out->points[h].x*factor;
-				cloud_out->points[h].y = cloud_out->points[h].y*factor;
-				cloud_out->points[h].z = cloud_out->points[h].z*factor;
-			}
-		}
-		std::cout<<"Resied"<<std::endl;
-		//stalker::voirPCL<T>(cloud_in, cloud_out);
-	}
 	
 
 	
@@ -97,7 +64,10 @@ namespace stalker{
 		transformation=icp.getFinalTransformation();
 		//std::cout << "has converged:" << icp.hasConverged() << " score: " <<
 		//icp.getFitnessScore() << std::endl;
-		//std::cout << icp.getFinalTransformation() << std::endl;		
+		//std::cout << icp.getFinalTransformation() << std::endl;	
+		
+		//std::cout<<"After ICP"<<std::endl;
+		//stalker::voirPCL<T>(cloud_in, cloud_out);
 	}
 	
 	template<typename T, typename D>

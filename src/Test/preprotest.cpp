@@ -122,6 +122,41 @@ BOOST_AUTO_TEST_CASE(trying)
 	stalker::passThrough<pcl::PointXYZ>(cloud, cloudt, "x", 1, 2);
 	stalker::passThrough<pcl::PointXYZ>(cloud, cloudt, "y", 1, 2);
 	stalker::passThrough<pcl::PointXYZ>(cloud, cloudt, "z", 1, 2);
+	
+	
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZ>);
+	cloud2->is_dense = false;
+
+	cloud2->width  = 5;
+	cloud2->height = 5;
+	cloud2->points.resize (cloud->width * cloud->height);
+	
+	
+	y=10;
+	yy=3;
+	yyy=6;
+	
+	cloud2->points.resize (cloud2->width * cloud2->height);
+	for (size_t i = 0; i < cloud2->points.size (); ++i)
+	{
+	cloud2->points[i].x = y;
+	cloud2->points[i].y = yy;
+	cloud2->points[i].z = yyy;
+	}
+	
+	cloud2->points[0].x=11;
+	cloud2->points[0].y=8;
+	cloud2->points[0].z=1;
+	
+	BOOST_CHECK_EQUAL(stalker::minCloud<pcl::PointXYZ>(cloud2, "x"), 10);
+	BOOST_CHECK_EQUAL(stalker::minCloud<pcl::PointXYZ>(cloud2, "y"), 3);
+	BOOST_CHECK_EQUAL(stalker::minCloud<pcl::PointXYZ>(cloud2, "z"), 1);
+	
+	BOOST_CHECK_EQUAL(stalker::maxCloud<pcl::PointXYZ>(cloud2, "x"), 11);
+	BOOST_CHECK_EQUAL(stalker::maxCloud<pcl::PointXYZ>(cloud2, "y"), 8);
+	BOOST_CHECK_EQUAL(stalker::maxCloud<pcl::PointXYZ>(cloud2, "z"), 6);
+	
+	
 
 	
 }

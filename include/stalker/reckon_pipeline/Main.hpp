@@ -129,9 +129,10 @@ class Main{
 	}
 	
 	virtual typename pcl::PointCloud<T>::Ptr getCloud(){return _scene;}
-	virtual typename pcl::PointCloud<T>::Ptr getShape(){return _object;}
+	virtual typename pcl::PointCloud<T>::Ptr getObject(){return _object;}
 	virtual Pipeline<T, DescriptorType>* getPipeline(){return _pipeline;}
 	virtual int getInterface(){return _whichInterface;}
+
 	
 	virtual void setResolution(bool b){resol_state=b;_pipeline->getObject()->setResolutionState(b);_pipeline->getScene()->setResolutionState(b);}
 	virtual void setScene(typename pcl::PointCloud<T>::Ptr& c);
@@ -171,12 +172,23 @@ class Main{
 	virtual void loadModel(const sensor_msgs::PointCloud2ConstPtr& cloudy);
 	virtual void loadModel(const typename pcl::PointCloud<T>::Ptr cloudy);
 	virtual void doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy); 
+	virtual void doWork(const typename pcl::PointCloud<T>::Ptr cloudy);
 	virtual void doWork();
 	
 		virtual void setResolutionState(bool b){ resol_state=b;}
 	virtual void setResolution(double r){_resolution=r;}
 		virtual double getResolutionState(){return resol_state;}
 	virtual double getResolution(){return _resolution;}
+	
+	virtual bool foundObject(){
+		if(_pipeline->foundObject()==true){
+			return true;
+			
+		}
+		else{
+			return false;
+		}
+	}
 	
 };
 
@@ -341,7 +353,28 @@ inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>
 
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy){
+	
 	pcl::fromROSMsg(*cloudy, *_scene);
+	
+	/**************************************************/
+	//TAKE THE RESOLUTION FROM THE MODEL HERE !//
+	
+	/**************************************************/
+	
+	if(_whichInterface==1){
+		_pipeline->setScene(_scene);
+	}
+	else{
+		addScene(_scene);
+	}
+	
+	doWork();
+}
+
+template <typename T, typename DescriptorType>
+inline void Main<T, DescriptorType>::doWork(const typename pcl::PointCloud<T>::Ptr cloudy){
+	
+	_scene=cloudy;
 	
 	/**************************************************/
 	//TAKE THE RESOLUTION FROM THE MODEL HERE !//

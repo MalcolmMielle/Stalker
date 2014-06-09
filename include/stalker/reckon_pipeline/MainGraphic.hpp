@@ -103,6 +103,7 @@ void MainGraphic<T, DescriptorType>::doWork()
 			++in;
 		}
 	}
+
 }
 
 

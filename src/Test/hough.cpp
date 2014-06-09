@@ -52,13 +52,23 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	bool show_correspondences_=true;
 	bool show_keypoints_=true;
+	
+	cg.setAlwaysSeeBest();
+	BOOST_CHECK_EQUAL(cg.getAlwaysSeeBest(),true);
+	
+	cg.setPostProcICPThresh(1e-7);
+	cg.getObject()->setRadiusDescriptorsEffective(0.05);
+	cg.getScene()->setRadiusDescriptorsEffective(0.05);
+	cg.getObject()->setSamplingSizeEffective(0.01);
+	cg.getScene()->setSamplingSizeEffective(0.01);
+	
 	/***FUNCTION***/
 	std::cout<<"Set functions"<<std::endl;
 	cg.setObject(object);
 	cg.setScene(cloud2);
 	
 	cg.doPipeline();
-	cg.doPipeline();
+	//cg.doPipeline();
 	
 	/*********/
 	

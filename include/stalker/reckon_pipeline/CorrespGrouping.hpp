@@ -67,19 +67,18 @@ inline void CorrespGrouping<T, DescriptorTypes>::point2PointCorrespondance(){
 		std::vector<int> neigh_indices(1);
 		std::vector<float> neigh_sqr_dists(1);
 		//skipping NaNs
-		std::cout<<"i "<<i<<std::endl; 
 		if (!pcl_isfinite (this->_scene->getDescr()->at (i).descriptor[0])) {
 			continue;
 		}
 
 		int found_neighs = match_search.nearestKSearch (this->_scene->getDescr()->at(i), 1, neigh_indices, neigh_sqr_dists);
-		if(kop%100==0){std::cout<<"Calculating the Point to Point correspondence..."<<std::endl;}
+		if(kop==10){std::cout<<"Calculating the Point to Point correspondence..."<<std::endl;kop=0;}
 		//  add match only if the squared descriptor distance is less than 0.25 (SHOT descriptor distances are between 0 and 1 by design)
 		if(found_neighs == 1 && neigh_sqr_dists[0] < 0.25f) {
 			pcl::Correspondence corr (neigh_indices[0], static_cast<int> (i), neigh_sqr_dists[0]);
 			this->_model_scene_corrs->push_back (corr);
-			kop++;
 		}
+		kop++;
 		
 	}
 	std::cout<<std::endl<<"Point 2 point correspondance grouping ";

@@ -13,9 +13,71 @@
 #include <pcl/keypoints/uniform_sampling.h>
 #include <pcl/features/normal_3d_omp.h>
 #include <time.h>
+#include "Postprocessing.hpp"
 
 namespace stalker
 {
+
+	template<typename T>
+	void removeNan(typename pcl::PointCloud<T>& cloud, typename pcl::PointCloud<T>& cloud_out);
+	
+	template<typename T>
+	void removeNanNormals(typename pcl::PointCloud<T>& cloud, typename pcl::PointCloud<T>& cloud_out);
+	
+	template<typename T>
+	void passThrough(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, const std::string& axis, int limits1, int limits2);
+	
+	template<typename T>
+	void statisticalOutilerRemoval(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, int nneighbor, double thresh);
+	
+	template<typename T>
+	void downSample(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, double radius);
+	
+	template <typename T, typename NormalType_template>
+	void estimNormal(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<NormalType_template>::Ptr cloud_out, double _k);
+	
+	template <typename T>
+	double computeCloudResolution (typename pcl::PointCloud<T>::Ptr cloud);
+	
+	template <typename T>
+	double computeCloudResolution (typename pcl::PointCloud<T>::Ptr cloud);
+	
+	template<typename T>
+	bool gotnanTEST(const typename pcl::PointCloud<T>& cloud);
+	
+	template<typename T>
+	bool gotinfTEST(const typename pcl::PointCloud<T>& cloud);
+	
+	template <typename T>
+	double maxCloud(typename pcl::PointCloud<T>::Ptr cloud, std::string axis);
+	
+	template <typename T>
+	double minCloud(typename pcl::PointCloud<T>::Ptr cloud, std::string axis);
+	
+	template<typename T>
+	void calculateSizePCL(typename pcl::PointCloud<T>::Ptr cloud, double& x, double& y, double& z);
+	
+	template <typename T>
+	void resizeCloud(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out);
+	
+	template<typename T>
+	void resizeCloudFactor(typename pcl::PointCloud<T>::Ptr cloud_in, typename pcl::PointCloud<T>::Ptr cloud_out, double factor);
+	
+	template<typename T>
+	void center(typename pcl::PointCloud<T>::Ptr cloud, std::string axis);
+	
+	//Better but slower downsampling method
+	template <typename T, typename NormalType_template>
+	double downSampleUniformGrid(pcl::PointCloud<T>& cloud, pcl::PointCloud<NormalType_template>& cloud_normal, pcl::PointCloud<T>& cloud_out, double thresold);
+	
+	template<typename NormalType_template>
+	double vCalculation(pcl::PointCloud<NormalType_template>& cloud_normal, size_t i, std::vector<int> index);
+	
+	double dotProduct(Eigen::Vector3d v, Eigen::Vector3d w);
+	/*********************************************************************/
+	
+	
+	
 	struct timespec now;
 	double tt_tic=0;
 
@@ -198,19 +260,362 @@ namespace stalker
 
 	//TODO
 	template<typename T>
-	double minCloud(typename pcl::PointCloud<T>::Ptr p, std::string axis){
-		int min = -1;
-		if(axis.compare("x")==0){ 
-			
+	double minCloud(typename pcl::PointCloud<T>::Ptr cloud, std::string axis){
+		double min = std::numeric_limits<double>::quiet_NaN();
+		if (cloud->isOrganized()){
+			std::cout<<"Cloud organized"<<std::endl;
+			for (int h=0; h<cloud->height; h++) {
+				for (int w=0; w<cloud->width; w++){
+					if(axis.compare("x")==0){ 
+						if(isnan(min)){
+							min=cloud->at(w, h).x;
+						}
+						else{
+							if(min>cloud->at(w, h).x){
+								min=cloud->at(w, h).x;
+							}
+						}			
+					}
+					if(axis.compare("y")==0){
+						if(isnan(min)){
+							min=cloud->at(w, h).y;
+						}
+						else{
+							if(min>cloud->at(w, h).y){
+								min=cloud->at(w, h).y;
+							}
+						}					
+					}
+					if(axis.compare("z")==0){
+						if(isnan(min)){
+							min=cloud->at(w, h).z;
+						}
+						else{
+							if(min>cloud->at(w, h).z){
+								min=cloud->at(w, h).z;
+							}
+						}					
+					}
+				}
+			}
 		}
-		if(axis.compare("y")==0){
-			
+		else{
+			std::cout<<"Cloud not organized "<<axis.compare("x")<<" "<<cloud->width<<std::endl;
+			for (int h=0; h<cloud->width; h++) {
+				if(axis.compare("x")==0){ 
+					std::cout<<"checking x"<<std::endl;
+					if(isnan(min)){
+						min=cloud->points[h].x;
+					}
+					else{
+						if(min>cloud->points[h].x){
+							min=cloud->points[h].x;
+						}
+					}			
+				}
+				if(axis.compare("y")==0){
+					if(isnan(min)){
+						min=cloud->points[h].y;
+					}
+					else{
+						if(min>cloud->points[h].y){
+							min=cloud->points[h].y;
+						}
+					}					
+				}
+				if(axis.compare("z")==0){
+					if(isnan(min)){
+						min=cloud->points[h].z;
+					}
+					else{
+						if(min>cloud->points[h].z){
+							min=cloud->points[h].z;
+						}
+					}					
+				}
+			}
 		}
-		if(axis.compare("z")==0){
-			
+		try{
+			if(isnan(min)){
+				throw std::invalid_argument("no min value found");
+			}
 		}
+		catch(std::exception const& e){
+			std::cerr << "Error : " << e.what() << std::endl;
+		}
+		
 		return min;
+	}	
+	
+	
+	
+	
+	
+	
+	template<typename T>
+	double maxCloud(typename pcl::PointCloud<T>::Ptr cloud, std::string axis){
+		double max = std::numeric_limits<double>::quiet_NaN();
+		if (cloud->isOrganized()){
+			std::cout<<"Cloud organized"<<std::endl;
+			for (int h=0; h<cloud->height; h++) {
+				for (int w=0; w<cloud->width; w++){
+					if(axis.compare("x")==0){ 
+						if(isnan(max)){
+							max=cloud->at(w, h).x;
+						}
+						else{
+							if(max<cloud->at(w, h).x){
+								max=cloud->at(w, h).x;
+							}
+						}			
+					}
+					if(axis.compare("y")==0){
+						if(isnan(max)){
+							max=cloud->at(w, h).y;
+						}
+						else{
+							if(max<cloud->at(w, h).y){
+								max=cloud->at(w, h).y;
+							}
+						}					
+					}
+					if(axis.compare("z")==0){
+						if(isnan(max)){
+							max=cloud->at(w, h).z;
+						}
+						else{
+							if(max<cloud->at(w, h).z){
+								max=cloud->at(w, h).z;
+							}
+						}					
+					}
+				}
+			}
+		}
+		else{
+			std::cout<<"Cloud not organized "<<axis.compare("x")<<" "<<cloud->width<<std::endl;
+			for (int h=0; h<cloud->width; h++) {
+				if(axis.compare("x")==0){ 
+					std::cout<<"checking x"<<std::endl;
+					if(isnan(max)){
+						max=cloud->points[h].x;
+					}
+					else{
+						if(max<cloud->points[h].x){
+							max=cloud->points[h].x;
+						}
+					}			
+				}
+				if(axis.compare("y")==0){
+					if(isnan(max)){
+						max=cloud->points[h].y;
+					}
+					else{
+						if(max<cloud->points[h].y){
+							max=cloud->points[h].y;
+						}
+					}					
+				}
+				if(axis.compare("z")==0){
+					if(isnan(max)){
+						max=cloud->points[h].z;
+					}
+					else{
+						if(max<cloud->points[h].z){
+							max=cloud->points[h].z;
+						}
+					}					
+				}
+			}
+		}
+		try{
+			if(isnan(max)){
+				throw std::invalid_argument("no max value found");
+			}
+		}
+		catch(std::exception const& e){
+			std::cerr << "Error : " << e.what() << std::endl;
+		}
+		
+		return max;
+	}	
+
+	
+	
+	
+	
+	
+	template<typename T>
+	void calculateSizePCL(typename pcl::PointCloud<T>::Ptr cloud, double& x, double& y, double& z){
+	
+		double min_x=minCloud<T>(cloud, "x");
+		double max_x=maxCloud<T>(cloud, "x");
+		
+		double min_y=minCloud<T>(cloud, "y");
+		double max_y=maxCloud<T>(cloud, "y");
+		
+		double min_z=minCloud<T>(cloud, "z");
+		double max_z=maxCloud<T>(cloud, "z");
+		
+		x=max_x-min_x;
+		y=max_y-min_y;
+		z=max_z-min_z;
+		
 	}
+	
+	template <typename T>
+	void resizeCloud(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out){
+		
+		double in_x=0;
+		double in_y=0;
+		double in_z=0;
+		
+		double out_x=0;
+		double out_y=0;
+		double out_z=0;
+		
+		calculateSizePCL<T>(cloud, in_x, in_y, in_z);
+		calculateSizePCL<T>(cloud_out, out_x, out_y, out_z);
+		
+		double factor_x=in_x/out_x;
+		double factor_y=in_y/out_y;
+		//double factor_z=in_z/out_z; <- background often visible, make the scaling be totally wrong !!!
+		
+		//double factor=(factor_x+factor_y+factor_z)/3;
+		double factor=(factor_x+factor_y)/2;
+		
+		resizeCloudFactor<T>(cloud_out, cloud_out, factor);
+		
+// 		//stalker::voirPCL<T>(cloud_out, cloud);
+
+	}
+	
+	
+	
+	template<typename T>
+	void resizeCloudFactor(typename pcl::PointCloud<T>::Ptr cloud_in, typename pcl::PointCloud<T>::Ptr cloud_out, double factor){
+		try{
+			if(factor<0){
+				throw std::invalid_argument("Factor < 0");
+			}
+		}
+		catch(std::exception const& e){
+			std::cerr << "Erreur in resize  : " << e.what() << std::endl;
+			factor=1;
+		}
+		
+		pcl::copyPointCloud(*cloud_in, *cloud_out);
+			
+		if (cloud_out->isOrganized()) {
+			for (int h=0; h<cloud_out->height; h++) {
+				for (int w=0; w<cloud_out->width; w++) {
+					cloud_out->at(w,h).x = cloud_out->at(w, h).x*factor;
+					cloud_out->at(w,h).y = cloud_out->at(w, h).y*factor;
+					cloud_out->at(w,h).z = cloud_out->at(w, h).z*factor;
+				}
+			}
+		}
+		else{
+			std::cerr << "Cloud not organized, can't apply the function : " <<cloud_in->width<<" "<<cloud_in->height<<" "<<cloud_out->width<<" "<<cloud_out->height<< std::endl;
+			for (int h=0; h<cloud_out->width; h++) {
+				cloud_out->points[h].x = cloud_out->points[h].x*factor;
+				cloud_out->points[h].y = cloud_out->points[h].y*factor;
+				cloud_out->points[h].z = cloud_out->points[h].z*factor;
+			}
+		}
+		std::cout<<"Resied"<<std::endl;
+		//stalker::voirPCL<T>(cloud_in, cloud_out);
+	}
+	
+	template<typename T>
+	void center(typename pcl::PointCloud<T>::Ptr cloud, std::string axis){
+		double min=minCloud<T>(cloud, axis);
+		for (int h=0; h<cloud->size(); h++){
+			if(axis.compare("x")==0){ 
+				cloud->points[h].x=cloud->points[h].x-min;	
+			}
+			if(axis.compare("y")==0){
+				cloud->points[h].y=cloud->points[h].y-min;	
+			}
+			if(axis.compare("z")==0){
+				cloud->points[h].z=cloud->points[h].z-min;	
+			}
+		}
+	}
+	
+	
+	/********************More downsample method*******************/
+	template <typename T, typename NormalType_template>
+	double downSampleUniformGrid(pcl::PointCloud<T>& cloud, pcl::PointCloud<NormalType_template>& cloud_normal, pcl::PointCloud<T>& cloud_out, double thresold){
+		//Calculate the absolute value of the dot product of all normal with on point and divide by the number of point.
+		std::cout<<"Downsample "<<thresold<<std::endl;
+		try{
+			if(cloud_normal.size()==cloud.size()){
+				for (size_t i=0;i<cloud_normal.size();++i){
+					std::cout<<"GO"<<std::endl;
+					//************* Nearest Neighbor search ************//
+					typename pcl::PointCloud<NormalType_template>::Ptr p(new pcl::PointCloud<NormalType_template>);
+					*p=cloud_normal;
+					pcl::KdTreeFLANN<NormalType_template> kdtree;
+					kdtree.setInputCloud (p);
+					NormalType_template searchPoint;	 
+					int K = 10;
+					std::vector<int> pointIdxNKNSearch;
+					std::vector<float> pointNKNSquaredDistance;
+					if(kdtree.radiusSearch (searchPoint, K, pointIdxNKNSearch, pointNKNSquaredDistance)>0){
+						//************** V CALCULATION *********************//
+						//cloud_out.points[i].strength=vCalculation(cloud_normal, i, pointIdxNKNSearch);
+						if(vCalculation(cloud_normal, i, pointIdxNKNSearch) >thresold){
+
+							cloud_out.push_back(T(cloud.points[i].x,cloud.points[i].y,cloud.points[i].z));
+							
+						}
+							
+					}
+					else{
+						cloud_out.push_back(T(cloud.points[i].x,cloud.points[i].y,cloud.points[i].z));
+					}
+					
+				}
+				
+				std::cout <<"Size before " << cloud_normal.size()<< " after "<< cloud_out.size() <<std::endl;
+				//**** If V under the thresold then the point is sampled. The smaller V, the flatter**/
+			}
+			else{
+				throw std::invalid_argument("Cloud and normal don't have the same size for the uniform grib downsampling : ");//Need to figure out how to change and know the shape's names !! Maybe a yaml file...
+			}
+		}
+		catch(std::exception const& e){
+			std::cerr << "Erreur : " << e.what() << cloud_normal.size()<<"!="<<cloud.size()<<std::endl;
+			exit(0);
+		}
+		
+		
+	}
+
+	template<typename NormalType_template>
+	double vCalculation(pcl::PointCloud<NormalType_template>& cloud_normal, size_t i, std::vector<int> index){
+		//V=absolute value of dot product / nd of points
+		
+		double sum;
+		for (size_t j = 0; j < index.size (); ++j){
+			sum=sum+dotProduct(	Eigen::Vector3d(cloud_normal.points[i].normal_x,cloud_normal.points[i].normal_y,cloud_normal.points[i].normal_z), 	   Eigen::Vector3d(cloud_normal.points[index[j]].normal_x,cloud_normal.points[index[j]].normal_y,cloud_normal.points[index[j]].normal_z));
+		}
+		sum=sum/index.size();
+		sum=1-sum;
+		return sum;
+	}
+
+
+	double dotProduct(Eigen::Vector3d v, Eigen::Vector3d w){
+		double dot=v.dot(w);
+		if( dot<0){
+			dot=-dot;
+		}
+		return dot;
+	}
+	
+	
 	
 	
 	

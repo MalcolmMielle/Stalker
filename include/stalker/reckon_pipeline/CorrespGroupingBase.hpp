@@ -40,12 +40,22 @@ class CorrespGroupingBaseBase : public Pipeline<T, DescriptorTypes> {
 	bool _useHough;	
 	double _postprocessing_icp_fitness_thresh;
 	
+	bool _always_show_best;
+	
 	public : 
 		
-	CorrespGroupingBaseBase(ShapeLocal<T, DescriptorTypes>* object, ShapeLocal<T, DescriptorTypes>* scene) : Pipeline<T, DescriptorTypes>(object, scene),/* _object(object), _scene(scene),*/resol(false), _rf_rad(0.015), _rf_rad_effective(0.015), _cg_size(0.01), _cg_size_effective(0.01), _cg_thresh(5.0), _model_scene_corrs(new pcl::Correspondences ()), _useGeometricConsistency(true), _useHough(false),_postprocessing_icp_fitness_thresh(6e-5) {};
+	CorrespGroupingBaseBase(ShapeLocal<T, DescriptorTypes>* object, ShapeLocal<T, DescriptorTypes>* scene) : Pipeline<T, DescriptorTypes>(object, scene),/* _object(object), _scene(scene),*/resol(false), _rf_rad(0.015), _rf_rad_effective(0.015), _cg_size(0.01), _cg_size_effective(0.01), _cg_thresh(5.0), _model_scene_corrs(new pcl::Correspondences ()), _useGeometricConsistency(true), _useHough(false),_postprocessing_icp_fitness_thresh(6e-5), _always_show_best(false) {};
 	
 	virtual void doPipeline();
 	virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy);
+	virtual bool foundObject(){
+		if(_rototranslations.size()>0){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
 	//virtual void doPipelineOld();
 	
 	//new stuff
@@ -59,6 +69,7 @@ class CorrespGroupingBaseBase : public Pipeline<T, DescriptorTypes> {
 
 	virtual void useHough(){_useHough=true; _useGeometricConsistency=false;}
 	virtual void useGeometricConsistency(){_useHough=false; _useGeometricConsistency=true;}
+	virtual void setAlwaysSeeBest(){if(_always_show_best==true){_always_show_best=false;}else{_always_show_best=true;}}
 	
 	virtual double getFrameRadius(){return _rf_rad;}
 	virtual double getClusterSize(){return _cg_size;}
@@ -68,6 +79,7 @@ class CorrespGroupingBaseBase : public Pipeline<T, DescriptorTypes> {
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >& getRoto(){return _rototranslations;}
 	std::vector<pcl::Correspondences>& getClust(){return _clustered_corrs;}
 	pcl::CorrespondencesPtr& getModelCorres(){return _model_scene_corrs;}
+	bool getAlwaysSeeBest(){return _always_show_best;}
 	
 	
 	virtual void resolutionInvariance();
@@ -275,6 +287,9 @@ inline void CorrespGroupingBaseBase<T, DescriptorTypes >::postProcessing(){
 
 	//TODO TESTIN PART TO REMOVE
 	double best=1;
+	int when_best=0;
+	int i=0;
+	
 	for(typename std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >::iterator it=this->_rototranslations.begin();it!=this->_rototranslations.end();)
 	{
 		std::cout<<"Post Processing"<<std::endl;
@@ -290,38 +305,49 @@ inline void CorrespGroupingBaseBase<T, DescriptorTypes >::postProcessing(){
 		
 		stalker::ICPtransform<T>(transformed_cloud, this->_scene->getCloud(), res, fitness,transformation_matrix_icp);
 
-		//TODO TO REMOVE / TEST
-		if(best>fitness){
-			best=fitness;
-			//stalker::voirPCL<T>(transformed_cloud,this->_scene->getCloud());
-			
-			Eigen::Matrix4f transformation_matrix2=(*it);
-			(transformation_matrix2)=(transformation_matrix2)*transformation_matrix_icp;
-			
-			typename pcl::PointCloud<T>::Ptr transformed_cloud_test (new pcl::PointCloud<T> ());
-	
-			pcl::transformPointCloud (*(this->_object->getCloud()), *transformed_cloud_test, transformation_matrix2);
-			
-			std::cout <<"NEW BEST! "<< best<< " cloud size model "<<this->_object->getCloud()->size()<<std::endl;
-			//stalker::voirPCL<T>(transformed_cloud_test,this->_scene->getCloud());
-		}
-	
 		
 		//False positive !
-		if(res==0 || fitness>_postprocessing_icp_fitness_thresh){
-			//std::cout<<"Bad model ! "<<fitness<<std::endl;
-			//delete(*it);
-			this->_rototranslations.erase(it);
+		if(_always_show_best==false){
+			if(res==0 || fitness>_postprocessing_icp_fitness_thresh){
+				//std::cout<<"Bad model ! "<<fitness<<std::endl;
+				//delete(*it);
+				this->_rototranslations.erase(it);
+			}
+			else{
+				std::cout<<"Found one good instance !"<<std::endl;
+				//Multiplying the matrix the have the total transformation !
+				(*it)=(*it)*transformation_matrix_icp;
+				//pcl::transformPointCloud (*(this->_object->getCloud()), *transformed_cloud, (*it));
+				++it;	
+			}
 		}
 		else{
-			std::cout<<"Found one good instance !"<<std::endl;
-			//Multiplying the matrix the have the total transformation !
-			(*it)=(*it)*transformation_matrix_icp;
-			//pcl::transformPointCloud (*(this->_object->getCloud()), *transformed_cloud, (*it));
-			++it;	
+			if(best>fitness){
+				best=fitness;
+				std::cout <<"NEW BEST! "<< best<< " cloud size model "<<this->_object->getCloud()->size()<<std::endl;
+				when_best=i;
+				if(i!=0){
+					it--;
+					this->_rototranslations.erase(it);
+					it++;
+				}
+			}
+			else{
+				this->_rototranslations.erase(it);
+			}
+			
 		}
-		
+		++i;
 	}
+	/*int j=0;
+	if(_always_show_best==true){
+		for(typename std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >::iterator it=this->_rototranslations.begin();it!=this->_rototranslations.end();){
+			if(j!=i){
+				this->_rototranslations.erase(it);
+			}
+			++j;
+		}
+	}*/
 }
 
 
