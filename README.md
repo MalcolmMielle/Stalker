@@ -64,8 +64,8 @@ With this repository, you'll find different class, descriptors and Pipeline.
 Here is a list of them :
 
 * Class : 
-+ ShapeLocal : Shape implementing local descriptors
-+ ShapeModelSlowCalculation : shape implementing local descriptors. Same as ShapeLocal but the downsample is better since we are using the Uniform Grid as describe in **A New Method for Cloud Data Reduction Using Uniform Grids** by __Zhao Sanyuan, Li Fengxia, Liu Yongmei, Rao Yonghui__. Thus the calculation are slower. It's useful if the model is never going to change in time.
+  + ShapeLocal : Shape implementing local descriptors
+  + ShapeModelSlowCalculation : shape implementing local descriptors. Same as ShapeLocal but the downsample is better since we are using the Uniform Grid as describe in **A New Method for Cloud Data Reduction Using Uniform Grids** by __Zhao Sanyuan, Li Fengxia, Liu Yongmei, Rao Yonghui__. Thus the calculation are slower. It's useful if the model is never going to change in time.
 + MainGraphic : Graphic version of the Main class
 + Gui1 : First extremely simple version of a Gui.
 
