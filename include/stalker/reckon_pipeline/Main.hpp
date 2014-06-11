@@ -132,7 +132,6 @@ class Main{
 	virtual typename pcl::PointCloud<T>::Ptr getObject(){return _object;}
 	virtual Pipeline<T, DescriptorType>* getPipeline(){return _pipeline;}
 	virtual int getInterface(){return _whichInterface;}
-
 	
 	virtual void setResolution(bool b){resol_state=b;_pipeline->getObject()->setResolutionState(b);_pipeline->getScene()->setResolutionState(b);}
 	virtual void setScene(typename pcl::PointCloud<T>::Ptr& c);

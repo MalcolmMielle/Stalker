@@ -14,6 +14,8 @@
 #include "Postprocessing.hpp"
 #include <pcl/registration/ia_ransac.h>
 
+#include "stalker/square.h"
+
 /******************Base de la base*******************/
 //Used to have all the parameters used somewhere before.
 //The last Corresp Grouping is merely used to be able to call them all by the same name.
@@ -41,6 +43,8 @@ class CorrespGroupingBaseBase : public Pipeline<T, DescriptorTypes> {
 	double _postprocessing_icp_fitness_thresh;
 	
 	bool _always_show_best;
+	
+	stalker::square _square;
 	
 	public : 
 		
@@ -81,6 +85,8 @@ class CorrespGroupingBaseBase : public Pipeline<T, DescriptorTypes> {
 	pcl::CorrespondencesPtr& getModelCorres(){return _model_scene_corrs;}
 	bool getAlwaysSeeBest(){return _always_show_best;}
 	
+	virtual void calculateBoundingBox();
+	virtual stalker::square& getBoundingBox(){calculateBoundingBox(); return _square;}
 	
 	virtual void resolutionInvariance();
 	virtual void clusteringHough();
@@ -115,6 +121,62 @@ class CorrespGroupingBaseBase : public Pipeline<T, DescriptorTypes> {
 	//virtual void setObject(typename pcl::PointCloud<T>::Ptr& obj){this->_object->set(obj);}
 
 };
+
+
+template <typename T, typename DescriptorTypes>
+inline void CorrespGroupingBaseBase<T, DescriptorTypes>::calculateBoundingBox()
+{
+	/*
+	 * Calculate size of Bounding box
+	 */
+	
+	//TODO Multiple instance of object
+
+	/*for(typename std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >::iterator it=this->_rototranslations.begin();it!=this->_rototranslations.end();)
+	{
+
+		//Eigen::Matrix4f transformation_matrix=(*it); <- (*it) is the transformation matrix
+		
+		typename pcl::PointCloud<T>::Ptr transformed_cloud (new pcl::PointCloud<T> ());	// A pointer on a new cloud
+		pcl::transformPointCloud (*(this->_object->getCloud()), *transformed_cloud, (*it));
+		
+	}*/
+	try{
+		if(this->_rototranslations.size()>0){
+			typename pcl::PointCloud<T>::Ptr transformed_cloud (new pcl::PointCloud<T> ());	// A pointer on a new cloud
+			pcl::transformPointCloud (*(this->_object->getCloud()), *transformed_cloud, this->_rototranslations[0]); //ONly the first instance
+			
+			double x=0;
+			double y=0;
+			double z=0;
+			stalker::calculateSizePCL<T>(transformed_cloud, x, y,z);
+			
+			_square.width=x;
+			_square.height=y;
+			
+			_square.point.x= stalker::minCloud<T>(transformed_cloud, "x");
+			_square.point.y= stalker::maxCloud<T>(transformed_cloud, "y");
+			_square.point.z= stalker::minCloud<T>(transformed_cloud, "z");
+		}
+		else{
+			_square.width=0;
+			_square.height=0;
+			_square.point.x=0;
+			_square.point.y=0;
+			_square.point.z=0;
+			throw std::invalid_argument("No Model istance have been found ! All values set to 0");//Need to figure out how to change and know the shape's names !! Maybe a yaml file...
+		}
+	}
+	catch(std::exception const& e){
+		std::cerr << "ERREUR in getBounding box : " << e.what() << std::endl;
+	}
+	
+	
+	//No resize when calculating the bounding box
+	
+}
+
+
 
 
 template <typename T, typename DescriptorTypes>
@@ -348,6 +410,7 @@ inline void CorrespGroupingBaseBase<T, DescriptorTypes >::postProcessing(){
 			++j;
 		}
 	}*/
+	std::cout<<"End of Post Processing"<<std::endl;
 }
 
 

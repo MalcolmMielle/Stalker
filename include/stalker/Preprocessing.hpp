@@ -15,6 +15,7 @@
 #include <time.h>
 #include "Postprocessing.hpp"
 
+
 namespace stalker
 {
 
@@ -74,6 +75,8 @@ namespace stalker
 	double vCalculation(pcl::PointCloud<NormalType_template>& cloud_normal, size_t i, std::vector<int> index);
 	
 	double dotProduct(Eigen::Vector3d v, Eigen::Vector3d w);
+	
+
 	/*********************************************************************/
 	
 	
@@ -616,7 +619,7 @@ namespace stalker
 	}
 	
 	
-	
+
 	
 	
 }

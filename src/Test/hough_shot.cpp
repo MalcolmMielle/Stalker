@@ -42,11 +42,12 @@ float cg_thresh_ (5.0f);
 BOOST_AUTO_TEST_CASE(trying)
 {
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr object (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	//pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd", *object);
-	pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord00000.pcd", *object);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd", *object);
+	//pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord00000.pcd", *object);
 	
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord200000.pcd", *cloud2);
+	//pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord200000.pcd", *cloud2);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
 	
 	//CorrespGrouping<pcl::PointXYZRGBA, Descriptor> cg(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob2",0.015));
 	
@@ -57,7 +58,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	bool show_correspondences_=true;
 	bool show_keypoints_=true;
 	
-	cg.setPostProcICPThresh(0.00007);
+	//cg.setPostProcICPThresh(0.00007);
 	cg.getObject()->setRadiusDescriptorsEffective(0.05);
 	cg.getScene()->setRadiusDescriptorsEffective(0.05);
 	cg.getObject()->setSamplingSizeEffective(0.01);
@@ -66,8 +67,8 @@ BOOST_AUTO_TEST_CASE(trying)
 	/***FUNCTION***/
 
 
-	cg.setObject(cloud2);
-	cg.setScene(object);
+	cg.setObject(object);
+	cg.setScene(cloud2);
 	
 	cg.doPipeline();
 	
@@ -101,6 +102,8 @@ BOOST_AUTO_TEST_CASE(trying)
 	}
 	pcl::visualization::PCLVisualizer viewer ("Correspondence Grouping");
 	viewer.addPointCloud (scene, "scene_cloud");
+	
+	viewer.addCoordinateSystem (1.0);
 
 	pcl::PointCloud<PointType>::Ptr off_scene_model (new pcl::PointCloud<PointType> ());
 	pcl::PointCloud<PointType>::Ptr off_scene_model_keypoints (new pcl::PointCloud<PointType> ());
@@ -153,9 +156,48 @@ BOOST_AUTO_TEST_CASE(trying)
 			}
 		}
 	}
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud22 (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud22);
-	std::cout<<"resolution"<< stalker::computeCloudResolution<pcl::PointXYZRGBA>(cloud22)<<std::endl;
+	std::cout <<"Drawing boudning box"<<std::endl;
+	//Draw boudning box : 
+	stalker::square sq;
+	sq=cg.getBoundingBox();
+	
+	std::cout <<"Got it"<<std::endl;
+	PointType p1;
+	p1.x=sq.point.x;
+	std::cout <<"setX"<<std::endl;
+	p1.y=sq.point.y;
+	p1.z=sq.point.z;
+	
+	PointType p2;
+	p2.x=sq.point.x+sq.width;
+	p2.y=sq.point.y;
+	p2.z=sq.point.z;
+	
+	PointType p3;
+	p3.x=sq.point.x+sq.width;
+	p3.y=sq.point.y-sq.height;
+	p3.z=sq.point.z;
+	
+	PointType p4;
+	p4.x=sq.point.x;
+	p4.y=sq.point.y-sq.height;
+	p4.z=sq.point.z;
+	std::cout <<"Putting name"<<std::endl;
+	std::stringstream ss_line1;
+	ss_line1 << "boudingbox1";
+	std::stringstream ss_line2;
+	ss_line2 << "boudingbox2";
+	std::stringstream ss_line3;
+	ss_line3 << "boudingbox3";
+	std::stringstream ss_line4;
+	ss_line4 << "boudingbox4";
+	
+	viewer.addLine<PointType, PointType> (p1, p2, 255, 255, 0, ss_line1.str ());
+	viewer.addLine<PointType, PointType> (p2, p3, 255, 255, 0, ss_line2.str ());
+	viewer.addLine<PointType, PointType> (p3, p4, 255, 255, 0, ss_line3.str ());
+	viewer.addLine<PointType, PointType> (p4, p1, 255, 255, 0, ss_line4.str ());
+	
+
 
 	while (!viewer.wasStopped ())
 	{

@@ -14,13 +14,13 @@ public :
         void removeNan(typename pcl::PointCloud<T>::Ptr& cloud) 
         { 
                 std::vector<int> indices; 
-                pcl::removeNaNFromPointCloud(*cloud,*cloud, indices); 
+                //pcl::removeNaNFromPointCloud(*cloud,*cloud, indices); 
         } 
                     
         void removeNanNormals(typename pcl::PointCloud<T>::Ptr& cloud) 
         { 
                 std::vector<int> indices; 
-                pcl::removeNaNNormalsFromPointCloud(*cloud,*cloud, indices); 
+               // pcl::removeNaNNormalsFromPointCloud(*cloud,*cloud, indices); 
         } 
 }; 
 

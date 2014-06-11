@@ -1,6 +1,7 @@
 #include <string.h>
 #include "ros/ros.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "geometry_msgs/PoseStamped.h"
 
 #include "pcl_ros/point_cloud.h"
 #include "pcl/io/ply_io.h"
@@ -14,15 +15,28 @@
 #include "Main.hpp"
 #include "Postprocessing.hpp"
 
+#include "stalker/square.h"
+
 
 #define Descriptor pcl::Histogram<153>
 #define PointType pcl::PointXYZRGBA
 
+/****** GLOBAL VARIABLES *****/
+
+CorrespGrouping<PointType, Descriptor >* cp= new CorrespGrouping<PointType, Descriptor >(new ShapeLocal<PointType, Descriptor >("object"), new ShapeLocal<PointType, Descriptor >("scene", 0.03));
+
+std::string frame;
+
+/*******Function********/
 
 
+
+
+/**************µCALLBACKS************************/
 
 void saveCloud(const sensor_msgs::PointCloud2ConstPtr& cloudy, pcl::PointCloud<PointType>::Ptr cloud){
 	 pcl::fromROSMsg(*cloudy, *cloud); 
+	 frame=cloudy->header.frame_id;
 }
 
 
@@ -40,9 +54,32 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 		main->doWork(cloud);
 		
 		if(main->foundObject()){
-		//publish the new bouding box
-			//bb_pub.publish<>();
-			//pose_pub.publish<>();
+		
+			/*** BOUNDING BOX****/
+			stalker::square square=cp->getBoundingBox();
+			bb_pub.publish<stalker::square>(square);
+			
+			/****POSE****/
+			//TODO For now it assumed that the model is centered at the begining. Need the either automatise the process or to calculate the first pose.
+			geometry_msgs::PoseStamped pose_stamped;
+			
+			pose_stamped.header.frame_id=frame;
+			
+			pose_stamped.pose.position.x=0;
+			pose_stamped.pose.position.y=0;
+			pose_stamped.pose.position.z=0;
+			
+			pose_stamped.pose.orientation.x=0;
+			pose_stamped.pose.orientation.y=0;
+			pose_stamped.pose.orientation.z=0;
+			pose_stamped.pose.orientation.w=1;
+			
+			//TODO What if multiples objects ?
+			stalker::calculatePose(cp->getRoto()[0], pose_stamped.pose ,pose_stamped.pose );
+			
+			pose_stamped.header.stamp=ros::Time::now();
+			
+			pose_pub.publish<geometry_msgs::PoseStamped>(pose_stamped);
 		}
 		
 	}
@@ -86,6 +123,14 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 }
 
 
+/*
+ * 
+ * 
+ * MAIN
+ * 
+ * 
+ */
+
 int main (int argc, char **argv){
 	ros::init(argc, argv, "Stalker");
 	ros::NodeHandle my_node;
@@ -110,7 +155,7 @@ int main (int argc, char **argv){
 	
 	MainGraphic<PointType, Descriptor > main;
 	
-	CorrespGrouping<PointType, Descriptor >* cp= new CorrespGrouping<PointType, Descriptor >(new ShapeLocal<PointType, Descriptor >("object"), new ShapeLocal<PointType, Descriptor >("scene", 0.03));
+
 	
 	main.setPipeline(cp);
 	/*******PARAMETERS****************/
