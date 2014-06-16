@@ -16,6 +16,7 @@
 #include "Postprocessing.hpp"
 
 #include "stalker/square.h"
+#include "stalker/getobject.h"
 
 
 #define Descriptor pcl::Histogram<153>
@@ -31,8 +32,50 @@ std::string frame;
 
 
 
-
 /**************µCALLBACKS************************/
+
+bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &res){
+	ROS_INFO("Request");
+	
+	if(req.ask==true && cp->foundObject()){
+		geometry_msgs::PoseStamped pose_stamped;
+				
+		pose_stamped.header.frame_id=frame;
+		
+		pose_stamped.pose.position.x=0;
+		pose_stamped.pose.position.y=0;
+		pose_stamped.pose.position.z=0;
+		
+		pose_stamped.pose.orientation.x=0;
+		pose_stamped.pose.orientation.y=0;
+		pose_stamped.pose.orientation.z=0;
+		pose_stamped.pose.orientation.w=1;
+		
+		//TODO What if multiples objects ?
+		stalker::calculatePose(cp->getRoto()[0], pose_stamped.pose ,pose_stamped.pose );
+		
+		pose_stamped.header.stamp=ros::Time::now();
+		
+		res.gotObject=true;
+		res.pose=pose_stamped;
+		res.who="Stalker";		
+	}	
+	
+	/*if(!strcmp(req.order.c_str(),"face")){
+		modelPath=req.model;
+		tld->release();
+		tld->readFromFile(modelPath);
+	}
+	else if(!strcmp(req.order.c_str(),"stoplook")){
+		ROS_INFO("Stop la reconnaissance");
+		tld->release();
+	}	
+	res.answer=req.order;
+	return true;*/
+	
+}
+
+
 
 void saveCloud(const sensor_msgs::PointCloud2ConstPtr& cloudy, pcl::PointCloud<PointType>::Ptr cloud){
 	 pcl::fromROSMsg(*cloudy, *cloud); 
@@ -148,6 +191,10 @@ int main (int argc, char **argv){
 	ros::Publisher pose_pub;
 	ros::Publisher newBB_pub;
 	
+	//Service
+	ros::ServiceServer service = my_node.advertiseService("getObject", getPose);
+	ROS_INFO("Ready to give the pose");
+	
 	ros::Timer bomb;
 	ros::Time timeStamp=ros::Time::now();
 	
@@ -209,5 +256,7 @@ int main (int argc, char **argv){
 		
 		ros::spinOnce();
 	}
+	
+	delete(cp);
 
 }

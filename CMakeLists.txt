@@ -65,11 +65,11 @@ add_message_files(
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
+ add_service_files(
+   FILES
+   getobject.srv
 #   Service2.srv
-# )
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -185,7 +185,8 @@ target_link_libraries(hough_shot ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_un
 #target_link_libraries(stalker_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
 add_executable(stalker_node_tld src/Stalker_TLD.cpp)
-target_link_libraries(stalker_node_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+target_link_libraries(stalker_node_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(stalker_node_tld stalker_generate_messages_cpp)
 
 #add_executable(create_model src/CreateModel.cpp)
 #target_link_libraries(create_model ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
