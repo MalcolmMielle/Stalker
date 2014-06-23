@@ -84,7 +84,7 @@ inline void ShapeGlobalXtion::compute()
 	
 	std::cout << "Pass Through"<<std::endl;
 		
-	//stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
+	stalker::passThrough<T>(this->_shape_keypoints, this->_shape_keypoints, "z", 0.8, 3.5);
 	
 	stalker::toc();
 	
