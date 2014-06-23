@@ -166,8 +166,8 @@ add_definitions(${PCL_DEFINITIONS})
 #add_executable(downsampltest src/Test/downsamplingtest.cpp)
 #target_link_libraries(downsampltest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
-add_executable(hough_shot src/Test/hough_shot.cpp)
-target_link_libraries(hough_shot ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+#add_executable(hough_shot src/Test/hough_shot.cpp)
+#target_link_libraries(hough_shot ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
 #add_executable(tcorsptuto src/Test/testcorresp.cpp)
 #target_link_libraries(tcorsptuto ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
@@ -187,6 +187,10 @@ target_link_libraries(hough_shot ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_un
 add_executable(stalker_node_tld src/Stalker_TLD.cpp)
 target_link_libraries(stalker_node_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(stalker_node_tld stalker_generate_messages_cpp)
+
+add_executable(stalker_global_tld src/Stalker_TLD.cpp)
+target_link_libraries(stalker_global_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(stalker_global_tld stalker_generate_messages_cpp)
 
 #add_executable(create_model src/CreateModel.cpp)
 #target_link_libraries(create_model ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
