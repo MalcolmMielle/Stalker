@@ -17,6 +17,7 @@
 
 #include "stalker/square.h"
 #include "stalker/getobject.h"
+#include "stalker/sentobject.h"
 
 
 #define Descriptor pcl::Histogram<153>
@@ -27,6 +28,9 @@
 CorrespGrouping<PointType, Descriptor >* cp= new CorrespGrouping<PointType, Descriptor >(new ShapeLocal<PointType, Descriptor >("object"), new ShapeLocal<PointType, Descriptor >("scene", 0.03));
 
 std::string frame;
+bool multiplerobots=false;
+ros::ServiceServer service;
+ros::ServiceClient client;
 
 /*******Function********/
 
@@ -75,6 +79,33 @@ bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &re
 	
 }
 
+void serviceSentPose(geometry_msgs::PoseStamped& pose_stamped){
+/****************************SERVICE*******************/
+
+	stalker::sentobject srv;
+	srv.request.gotObject=true;
+	srv.request.pose=pose_stamped;
+	if (client.call(srv))
+	{
+		if(srv.response.keepsearching==true){
+			ROS_INFO("We still need to search");
+		}
+		else{
+			ROS_INFO("We found an object");
+		}
+	}
+	else
+	{
+		ROS_ERROR("Failed to call service send Object");
+	}
+
+/***************************************************/
+}
+
+
+
+
+/*****************************************************************/
 
 
 void saveCloud(const sensor_msgs::PointCloud2ConstPtr& cloudy, pcl::PointCloud<PointType>::Ptr cloud){
@@ -123,6 +154,13 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 			pose_stamped.header.stamp=ros::Time::now();
 			
 			pose_pub.publish<geometry_msgs::PoseStamped>(pose_stamped);
+			
+			if(multiplerobots==true){
+				serviceSentPose(pose_stamped);
+				
+			}
+			
+			
 		}
 		
 	}
@@ -155,11 +193,39 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 		
 		main->doWork(pc2);
 		
+		geometry_msgs::PoseStamped pose_stamped;
 		if(main->foundObject()){
-		//publish the new bouding box
-			//pose_pub.publish<>();
+		/*** BOUNDING BOX****/
+			//stalker::square square=cp->getBoundingBox();
+			//bb_pub.publish<stalker::square>(square);
+			
+			/****POSE****/
+			//TODO For now it assumed that the model is centered at the begining. Need the either automatise the process or to calculate the first pose.
+			
+			pose_stamped.header.frame_id=frame;
+			
+			pose_stamped.pose.position.x=0;
+			pose_stamped.pose.position.y=0;
+			pose_stamped.pose.position.z=0;
+			
+			pose_stamped.pose.orientation.x=0;
+			pose_stamped.pose.orientation.y=0;
+			pose_stamped.pose.orientation.z=0;
+			pose_stamped.pose.orientation.w=1;
+			
+			//TODO What if multiples objects ?
+			stalker::calculatePose(cp->getRoto()[0], pose_stamped.pose ,pose_stamped.pose );
+			
+			pose_stamped.header.stamp=ros::Time::now();
+			
+			pose_pub.publish<geometry_msgs::PoseStamped>(pose_stamped);
+			
+			if(multiplerobots==true){
+				serviceSentPose(pose_stamped);
+				
+			}
+
 		}
-		
 	}
 	
 	timestamp=ros::Time::now();
@@ -191,9 +257,21 @@ int main (int argc, char **argv){
 	ros::Publisher pose_pub;
 	ros::Publisher newBB_pub;
 	
-	//Service
-	ros::ServiceServer service = my_node.advertiseService("getObject", getPose);
-	ROS_INFO("Ready to give the pose");
+
+	
+	/************************************SERVICE********************************/
+
+	
+	if(multiplerobots==false){
+	//Service for one robot ... for more we are actually requesting Mother Brain the other way round
+		service = my_node.advertiseService("getObject", getPose);
+		ROS_INFO("Ready to give the pose");
+	}
+	else{
+		client = my_node.serviceClient<stalker::sentobject>("sentObject");
+	}
+	
+	/**************************************************************************/
 	
 	ros::Timer bomb;
 	ros::Time timeStamp=ros::Time::now();
@@ -252,9 +330,8 @@ int main (int argc, char **argv){
 	
 
 	while(ros::ok()){		
-		
-		
 		ros::spinOnce();
+			
 	}
 	
 	delete(cp);

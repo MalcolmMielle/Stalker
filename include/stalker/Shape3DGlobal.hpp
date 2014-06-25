@@ -5,7 +5,7 @@
 
 
 template <typename T, typename DescriptorType>
-class ShapeGlobal : public Shape {3
+class ShapeGlobal : public Shape<T, DescriptorType>{
 
 
 	ShapeGlobal(const std::string& name) : Shape<T, DescriptorType>(name){};
@@ -21,7 +21,8 @@ class ShapeGlobal : public Shape {3
 
 };
 
-inline void ShapeGlobal::compute()
+template <typename T, typename DescriptorType>
+inline void ShapeGlobal<T, DescriptorType>::compute()
 {
 	stalker::tic();
 	std::cout << "Normal"<<std::endl;
@@ -49,7 +50,7 @@ inline void ShapeGlobal::compute()
 /***********************µSpecial Xtion**********************/
 
 template <typename T, typename DescriptorType>
-class ShapeGlobalXtion : public ShapeGlobal {3
+class ShapeGlobalXtion : public ShapeGlobal<T, DescriptorType> {
 
 
 	ShapeGlobalXtion(const std::string& name) : ShapeGlobal<T, DescriptorType>(name){};
@@ -65,7 +66,8 @@ class ShapeGlobalXtion : public ShapeGlobal {3
 
 };
 
-inline void ShapeGlobalXtion::compute()
+template <typename T, typename DescriptorType>
+inline void ShapeGlobalXtion<T, DescriptorType>::compute()
 {
 	stalker::tic();
 	std::cout << "Normal"<<std::endl;

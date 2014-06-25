@@ -68,6 +68,7 @@ add_message_files(
  add_service_files(
    FILES
    getobject.srv
+   sentobject.srv
 #   Service2.srv
  )
 
@@ -188,7 +189,7 @@ add_executable(stalker_node_tld src/Stalker_TLD.cpp)
 target_link_libraries(stalker_node_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(stalker_node_tld stalker_generate_messages_cpp)
 
-add_executable(stalker_global_tld src/Stalker_TLD.cpp)
+add_executable(stalker_global_tld src/Stalker_Global.cpp)
 target_link_libraries(stalker_global_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(stalker_global_tld stalker_generate_messages_cpp)
 
@@ -223,7 +224,7 @@ add_dependencies(stalker_global_tld stalker_generate_messages_cpp)
 ## as an example, message headers may need to be generated before nodes
 #add_dependencies(stalker_node stalker_generate_messages_cpp)
 #add_dependencies(stalker_node_nogui stalker_generate_messages_cpp)
-add_dependencies(stalker_node_tld stalker_generate_messages_cpp)
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(stalker_node
 #   ${catkin_LIBRARIES}

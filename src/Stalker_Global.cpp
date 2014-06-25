@@ -171,7 +171,7 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 /*
  * 
  * 
- * MAIN
+ * MAINtemplate <typename T, typename DescriptorType>
  * 
  * 
  */

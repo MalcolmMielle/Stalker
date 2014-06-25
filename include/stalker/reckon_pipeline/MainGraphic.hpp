@@ -24,6 +24,13 @@ class MainGraphic : public Main<T, DescriptorType>{
 		gui->add(*(this->_pipeline->getScene() ));
 	}
 	
+	MainGraphic(Pipeline<T, DescriptorType>* p) : Main<T, DescriptorType>(p), gui(new Gui1<T, DescriptorType>){
+		std::cout<<"buiding the main Graphic"<<std::endl;
+		//gui->add(this->_cloud,"scene");
+		gui->add(*(this->_pipeline->getObject() ));
+		gui->add(*(this->_pipeline->getScene() ));
+	}
+	
 	~MainGraphic(){
 		std::cout<<"deleting the mainGraphic"<<std::endl;
 		//Main<T, DescriptorType>::~Main();
