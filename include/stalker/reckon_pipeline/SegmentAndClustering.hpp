@@ -17,7 +17,7 @@ class SegmentAndClustering : public Pipeline<T, DescriptorTypes> {
 private:
   //store the pose of the custers
   std::vector<Eigen::Matrix< Scalar, 4, 1 > > _poses;//(x,y,z,0)
-  std::vector<pcl::PointCloud<T> > _clusters;
+  std::vector<typename pcl::PointCloud<T> > _clusters;
   
 public:
   //reimplement the virtual function

@@ -193,6 +193,10 @@ add_executable(stalker_global_tld src/Stalker_Global.cpp)
 target_link_libraries(stalker_global_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(stalker_global_tld stalker_generate_messages_cpp)
 
+add_executable(service_client_test src/Test/service_client.cpp)
+target_link_libraries(service_client_test ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(service_client_test stalker_generate_messages_cpp)
+
 #add_executable(create_model src/CreateModel.cpp)
 #target_link_libraries(create_model ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
