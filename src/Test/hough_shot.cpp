@@ -71,6 +71,17 @@ BOOST_AUTO_TEST_CASE(trying)
 	cg.setScene(cloud2);
 	
 	cg.doPipeline();
+	cg.doPipeline();
+	
+	cg.setObject(cloud2);
+	cg.setScene(object);
+	
+	cg.doPipeline();
+	
+	cg.setObject(object);
+	cg.setScene(cloud2);
+	
+	cg.doPipeline();
 	
 	/*********/
 	
