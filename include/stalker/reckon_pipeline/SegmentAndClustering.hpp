@@ -41,8 +41,7 @@ public:
     
     virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy) {};
 	
-	//TODO
-	virtual bool foundObject(){};
+	virtual bool foundObject(){return (_clusters.size() != 0);}
 };
 
 template <typename T, typename DescriptorTypes>
