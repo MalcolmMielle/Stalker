@@ -1,3 +1,6 @@
+#ifndef SEGMENTATION8AND8CLUSTERING_BASE_H
+#define SEGMENTATION8AND8CLUSTERING_BASE_H
+
 //PCL
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
@@ -10,6 +13,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/centroid.h>
 
+#include "Shape3DGlobal.hpp"
 #include "Pipeline.hpp"
 
 template <typename T, typename DescriptorTypes>
@@ -21,6 +25,10 @@ private:
 
 public:
     //reimplement the virtual function
+    
+    SegmentAndClustering(ShapeGlobal<T, DescriptorTypes>* object, ShapeGlobal<T, DescriptorTypes>* scene) : Pipeline<T, DescriptorTypes>(object, scene) {};
+    
+    
     virtual void doPipeline();
     //the user interface to get the clusters and their poses
     std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > getRoto() {
@@ -29,10 +37,16 @@ public:
     std::vector<typename pcl::PointCloud<T>::Ptr> getClusters() {
         return _clusters;
     }
+    
+    
+    virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy) {};
+	
+	//TODO
+	virtual bool foundObject(){};
 };
 
 template <typename T, typename DescriptorTypes>
-void SegmentAndClustering<T, DescriptorTypes>::doPipeline()
+inline void SegmentAndClustering<T, DescriptorTypes>::doPipeline()
 {
     typename pcl::PointCloud<T>::Ptr cloud = this->getScene()->getCloud();
 
@@ -97,3 +111,5 @@ void SegmentAndClustering<T, DescriptorTypes>::doPipeline()
 	_rototranslations.push_back(pose);
     }
 }
+
+#endif

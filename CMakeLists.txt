@@ -196,6 +196,9 @@ add_dependencies(stalker_global_tld stalker_generate_messages_cpp)
 add_executable(seg_and_cluster src/Test/seg_and_cluster.cpp)
 target_link_libraries(seg_and_cluster ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
 
+#add_executable(sgtest src/Test/segandclustest.cpp)
+#target_link_libraries(sgtest ${catkin_LIBRARIES} ${PCL_LIBRARIES} -lboost_unit_test_framework)
+
 #add_executable(service_client_test src/Test/service_client.cpp)
 #target_link_libraries(service_client_test ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 #add_dependencies(service_client_test stalker_generate_messages_cpp)

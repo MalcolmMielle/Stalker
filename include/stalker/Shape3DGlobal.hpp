@@ -7,7 +7,7 @@
 template <typename T, typename DescriptorType>
 class ShapeGlobal : public Shape<T, DescriptorType>{
 
-
+public:
 	ShapeGlobal(const std::string& name) : Shape<T, DescriptorType>(name){};
 	ShapeGlobal(const std::string& name, double sampling_size) : Shape<T, DescriptorType>(name, sampling_size){};
 	ShapeGlobal(const std::string& name, double sampling_size, double descriptor_radius) : Shape<T, DescriptorType>(name, sampling_size, descriptor_radius){};
@@ -16,6 +16,21 @@ class ShapeGlobal : public Shape<T, DescriptorType>{
 	//Function
 	
 	virtual void compute();
+	
+	//PRINT
+	//Print interface
+	virtual void addPrint(Gui<T, DescriptorType>& gui){
+		std::cout<<"Je suis une shape globale"<<std::endl;
+		gui.add(*this);
+	}
+	
+	virtual void printupdate(Gui<T, DescriptorType>& gui){
+		gui.update(*this);
+	}
+
+	virtual void remove(Gui<T, DescriptorType>& gui){
+		gui.remove(*this);
+	}
 
 
 
