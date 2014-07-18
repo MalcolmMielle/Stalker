@@ -43,6 +43,10 @@ public:
     virtual void doPipeline(const sensor_msgs::PointCloud2ConstPtr& cloudy) {};
 	
 	virtual bool foundObject(){return (_clusters.size() != 0);}
+	
+	void eraseClust();
+	void eraseRot();
+	
 };
 
 template <typename T, typename DescriptorTypes>
@@ -117,8 +121,6 @@ inline void SegmentAndClustering<T, DescriptorTypes>::doPipeline()
     }
 }
 
-<<<<<<< HEAD
-
 
 
 template <typename T, typename DescriptorTypes>
@@ -137,6 +139,4 @@ inline void SegmentAndClustering<T, DescriptorTypes>::eraseClust(){
 
 
 #endif
-=======
-#endif
->>>>>>> 5a0738e... implement foundObject() virtual function
+
