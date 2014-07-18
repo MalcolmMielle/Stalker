@@ -32,11 +32,15 @@ SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>* cp= new SegmentAndClusterin
 
 std::string frame;
 
+
+
 /*******Function********/
 
 
 
 /**************µCALLBACKS************************/
+
+//Service Server
 
 bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &res){
 	ROS_INFO("Request");
@@ -76,6 +80,73 @@ bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &re
 	}	
 	res.answer=req.order;
 	return true;*/
+	
+}
+
+
+//TODO Service CLIENT : 
+
+//TODO A TESTER PARCE QUE CODER EN 5 SECONDES.
+
+void service_client(ros::ServiceClient& client){
+	
+	int i=0;
+	geometry_msgs::PoseStamped pose_stamped;
+	
+	pose_stamped.header.frame_id=frame;
+	
+	pose_stamped.pose.position.x=0;
+	pose_stamped.pose.position.y=0;
+	pose_stamped.pose.position.z=0;
+	
+	pose_stamped.pose.orientation.x=0;
+	pose_stamped.pose.orientation.y=0;
+	pose_stamped.pose.orientation.z=0;
+	pose_stamped.pose.orientation.w=1;
+	
+	//TODO What if multiples objects ?
+	stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose );
+	
+	pose_stamped.header.stamp=ros::Time::now();
+
+	
+	stalker::sentobject srv;
+
+	srv.gotObject=true;
+	srv.request.pose = pose_stamped.pose;
+	srv.request.robot_id="0";
+	
+	srv.response.keepsearching=true;
+
+	while(srv.response.keepsearching && i<cp->getRoto().size() ){
+		stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose );
+		pose_stamped.header.stamp=ros::Time::now();
+		
+		srv.gotObject=true;
+		srv.request.pose = pose_stamped.pose;
+		srv.request.robot_id="0";
+		if (client.call(srv))
+		{
+		}
+		else
+		{
+			ROS_ERROR("Failed to call service add_two_ints");
+			return 1;
+		}
+		i++;
+	}
+	//TODO
+	if(srv.response.keepsearching==false){
+		
+		
+	}
+	else if(i>=cp->getRoto().size()){
+		
+	}
+	else{
+		
+	}
+
 	
 }
 
@@ -134,7 +205,7 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 	
 }
 
-void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub){
+void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub, ros::ServiceClient& client){
 	
 	std::cout<<"************************************* Opent TLD got a Model********************************"<<std::endl;
 
@@ -162,6 +233,8 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 		if(main->foundObject()){
 		//publish the new bouding box
 			//pose_pub.publish<>();
+
+			service_client(client);
 		}
 		
 	}
@@ -197,6 +270,7 @@ int main (int argc, char **argv){
 	
 	//Service
 	ros::ServiceServer service = my_node.advertiseService("getObject", getPose);
+	ros::ServiceClient client = my_node.serviceClient<stalker::sentObject>("sentobject");
 	ROS_INFO("Ready to give the pose");
 	
 	ros::Timer bomb;
