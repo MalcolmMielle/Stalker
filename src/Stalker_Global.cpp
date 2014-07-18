@@ -14,7 +14,9 @@
 #include "MainGraphic.hpp"
 #include "Main.hpp"
 #include "Postprocessing.hpp"
-#include "Shape3DGlobal.hpp"
+
+#include <SegmentAndClustering.hpp>
+#include <Shape3DGlobal.hpp>
 
 #include "stalker/square.h"
 #include "stalker/getobject.h"
@@ -26,7 +28,7 @@
 /****** GLOBAL VARIABLES *****/
 
 //Declare you're new Pipeline there
-CorrespGrouping<PointType, Descriptor >* cp= new CorrespGrouping<PointType, Descriptor >(new ShapeLocal<PointType, Descriptor >("object"), new ShapeLocal<PointType, Descriptor >("scene", 0.03));
+SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>* cp= new SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>(new ShapeGlobal<PointType, Descriptor>("bob1"), new ShapeGlobal<PointType, Descriptor>("bob2"));
 
 std::string frame;
 
@@ -98,34 +100,34 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 		
 		main->doWork(cloud);
 		
-		if(main->foundObject()){
+		//if(main->foundObject()){
 		
 			/*** BOUNDING BOX****/
-			stalker::square square=cp->getBoundingBox();
-			bb_pub.publish<stalker::square>(square);
+			//stalker::square square=cp->getBoundingBox();
+			//bb_pub.publish<stalker::square>(square);
 			
 			/****POSE****/
 			//TODO For now it assumed that the model is centered at the begining. Need the either automatise the process or to calculate the first pose.
-			geometry_msgs::PoseStamped pose_stamped;
+			//geometry_msgs::PoseStamped pose_stamped;
 			
-			pose_stamped.header.frame_id=frame;
+			//pose_stamped.header.frame_id=frame;
 			
-			pose_stamped.pose.position.x=0;
-			pose_stamped.pose.position.y=0;
-			pose_stamped.pose.position.z=0;
+			//pose_stamped.pose.position.x=0;
+			//pose_stamped.pose.position.y=0;
+			//pose_stamped.pose.position.z=0;
 			
-			pose_stamped.pose.orientation.x=0;
-			pose_stamped.pose.orientation.y=0;
-			pose_stamped.pose.orientation.z=0;
-			pose_stamped.pose.orientation.w=1;
+			//pose_stamped.pose.orientation.x=0;
+			//pose_stamped.pose.orientation.y=0;
+			//pose_stamped.pose.orientation.z=0;
+			//pose_stamped.pose.orientation.w=1;
 			
 			//TODO What if multiples objects ?
-			stalker::calculatePose(cp->getRoto()[0], pose_stamped.pose ,pose_stamped.pose );
+			//stalker::calculatePose(cp->getRoto()[0], pose_stamped.pose ,pose_stamped.pose );
 			
-			pose_stamped.header.stamp=ros::Time::now();
+			//pose_stamped.header.stamp=ros::Time::now();
 			
-			pose_pub.publish<geometry_msgs::PoseStamped>(pose_stamped);
-		}
+			//pose_pub.publish<geometry_msgs::PoseStamped>(pose_stamped);
+		//}
 		
 	}
 	
@@ -216,7 +218,7 @@ int main (int argc, char **argv){
 	
 	//main.setResolution(true);
 	/* SPIN IMAGE*/
-	cp->setPostProcICPThresh(1e-7);
+	//cp->setPostProcICPThresh(1e-7);
 	cp->getObject()->setRadiusDescriptorsEffective(0.05);
 	cp->getScene()->setRadiusDescriptorsEffective(0.05);
 	cp->getObject()->setSamplingSizeEffective(0.01);
@@ -229,8 +231,8 @@ int main (int argc, char **argv){
 	cp->getObject()->setSamplingSizeEffective(0.005);
 	cp->getScene()->setSamplingSizeEffective(0.005);*/
 	
-	cp->setAlwaysSeeBest();
-	cp->useGeometricConsistency();
+	//cp->setAlwaysSeeBest();
+	//cp->useGeometricConsistency();
 	
 	/*****************************************/
 	

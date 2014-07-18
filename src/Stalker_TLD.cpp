@@ -254,8 +254,8 @@ int main (int argc, char **argv){
 	ros::Subscriber trackerfullcloud;
 	
 	
-	ros::Publisher pose_pub;
-	ros::Publisher newBB_pub;
+	ros::Publisher pose_pub=my_node.advertise<geometry_msgs::PoseStamped>("pose_pub", 1000);
+	ros::Publisher newBB_pub=my_node.advertise<stalker::square>("new_bb", 1000);
 	
 
 	

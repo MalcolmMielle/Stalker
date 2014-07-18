@@ -16,6 +16,7 @@
 #include "Shape3DGlobal.hpp"
 #include "Pipeline.hpp"
 
+
 template <typename T, typename DescriptorTypes>
 class SegmentAndClustering : public Pipeline<T, DescriptorTypes> {
 private:
@@ -31,10 +32,10 @@ public:
     
     virtual void doPipeline();
     //the user interface to get the clusters and their poses
-    std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > getRoto() {
+    std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >& getRoto() {
         return _rototranslations;
     }
-    std::vector<typename pcl::PointCloud<T>::Ptr> getClusters() {
+    std::vector<typename pcl::PointCloud<T> >& getClusters() {
         return _clusters;
     }
     
@@ -43,11 +44,21 @@ public:
 	
 	//TODO
 	virtual bool foundObject(){};
+	
+	virtual void eraseRot();
+	virtual void eraseClust();
+	
+	
 };
 
 template <typename T, typename DescriptorTypes>
 inline void SegmentAndClustering<T, DescriptorTypes>::doPipeline()
 {
+	
+	this->eraseClust();
+	this->eraseRot();
+
+	
     typename pcl::PointCloud<T>::Ptr cloud = this->getScene()->getCloud();
 
     //plane segmentation using RANSAC
@@ -111,5 +122,23 @@ inline void SegmentAndClustering<T, DescriptorTypes>::doPipeline()
 	_rototranslations.push_back(pose);
     }
 }
+
+
+
+
+template <typename T, typename DescriptorTypes>
+inline void SegmentAndClustering<T, DescriptorTypes>::eraseRot(){
+	for(typename std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >::iterator it=this->_rototranslations.begin();it!=this->_rototranslations.end();){
+		this->_rototranslations.erase(it);
+	}
+}
+
+template <typename T, typename DescriptorTypes>
+inline void SegmentAndClustering<T, DescriptorTypes>::eraseClust(){
+	for(typename std::vector<typename pcl::PointCloud<T> >::iterator it=this->_clusters.begin();it!=this->_clusters.end();){
+		this->_clusters.erase(it);
+	}
+}
+
 
 #endif

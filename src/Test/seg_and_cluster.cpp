@@ -44,17 +44,17 @@ float cg_thresh_ (5.0f);
 BOOST_AUTO_TEST_CASE(trying)
 {
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr object (new pcl::PointCloud<pcl::PointXYZRGBA>);
-	pcl::io::loadPCDFile ("~/code/ros/hydro/workspace/src/stalker/src/Test/milk.pcd", *object);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd", *object);
 	//pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord00000.pcd", *object);
 	
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud2 (new pcl::PointCloud<pcl::PointXYZRGBA>);
 	//pcl::io::loadPCDFile ("/mnt/Data/Mad Maker/PCL/Blender Models/starbucks_coord200000.pcd", *cloud2);
-	pcl::io::loadPCDFile ("~/code/ros/hydro/workspace/src/stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
+	pcl::io::loadPCDFile ("/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk_cartoon_all_small_clorox.pcd", *cloud2);
 	
 	//CorrespGrouping<pcl::PointXYZRGBA, Descriptor> cg(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob2",0.015));
 	
-	SegmentAndClustering<pcl::PointXYZRGBA, Descriptor> sc(new ShapeGlobal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeGlobal<pcl::PointXYZRGBA, Descriptor>("bob2"));
-	CorrespGrouping<pcl::PointXYZRGBA, Descriptor> cg(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob2"));
+	SegmentAndClustering<pcl::PointXYZRGBA, Descriptor> cg(new ShapeGlobal<PointType, Descriptor>("bob1"), new ShapeGlobal<PointType, Descriptor>("bob2"));
+	CorrespGrouping<pcl::PointXYZRGBA, Descriptor> tg(new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob1"), new ShapeLocal<pcl::PointXYZRGBA, Descriptor>("bob2"));
 	
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > rototranslations;
 	
@@ -89,7 +89,12 @@ BOOST_AUTO_TEST_CASE(trying)
 	/*********/
 	
 	rototranslations=cg.getRoto();
-	std::vector<pcl::Correspondences> clustered_corrs=cg.getClust();
+	//For correspondance grouping 
+	//std::vector<pcl::Correspondences> clustered_corrs=cg.getClust();
+	
+	//For Seg and clustering
+	std::vector<typename pcl::PointCloud<PointType> > clustered_corrs;
+	clustered_corrs=cg.getClusters();
 	
 	pcl::PointCloud<PointType>::Ptr model = cg.getObject()->getCloud();
 	pcl::PointCloud<PointType>::Ptr model_keypoints=cg.getObject()->getKeypoints();
@@ -97,7 +102,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	pcl::PointCloud<PointType>::Ptr scene = cg.getScene()->getCloud();
 	pcl::PointCloud<PointType>::Ptr scene_keypoints=cg.getScene()->getKeypoints();
 	
-	std::cout << "Model instances found: " << rototranslations.size () << std::endl;
+	/*std::cout << "Model instances found: " << rototranslations.size () << std::endl;
 	for (size_t i = 0; i < rototranslations.size (); ++i)
 	{
 		std::cout << "\n    Instance " << i + 1 << ":" << std::endl;
@@ -113,7 +118,7 @@ BOOST_AUTO_TEST_CASE(trying)
 		printf ("            | %6.3f %6.3f %6.3f | \n", rotation (2,0), rotation (2,1), rotation (2,2));
 		printf ("\n");
 		printf ("        t = < %0.3f, %0.3f, %0.3f >\n", translation (0), translation (1), translation (2));
-	}
+	}*/
 	pcl::visualization::PCLVisualizer viewer ("Correspondence Grouping");
 	viewer.addPointCloud (scene, "scene_cloud");
 	
@@ -158,19 +163,36 @@ BOOST_AUTO_TEST_CASE(trying)
 
 		if (show_correspondences_)
 		{
-			for (size_t j = 0; j < clustered_corrs[i].size (); ++j)
+			
+		
+			
+			
+		/*	for (size_t j = 0; j < clustered_corrs[i].size (); ++j)
 			{
 				std::stringstream ss_line;
 				ss_line << "correspondence_line" << i << "_" << j;
-				PointType& model_point = off_scene_model_keypoints->at (clustered_corrs[i][j].index_query);
-				PointType& scene_point = scene_keypoints->at (clustered_corrs[i][j].index_match);
+				//PointType& model_point = off_scene_model_keypoints->at (clustered_corrs[i][j].index_query);
+				//PointType& scene_point = scene_keypoints->at (clustered_corrs[i][j].index_match);
 
 				//  We are drawing a line for each pair of clustered correspondences found between the model and the scene
 				viewer.addLine<PointType, PointType> (model_point, scene_point, 0, 255, 0, ss_line.str ());
-			}
+			}*/
 		}
 	}
-	std::cout <<"Drawing boudning box"<<std::endl;
+	
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudmot (new pcl::PointCloud<pcl::PointXYZRGBA>);
+	
+	for (size_t i = 0; i < clustered_corrs.size (); ++i){
+				std::stringstream ss_cloud_v;
+				ss_cloud_v << "cluster" << i;
+				pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudmot (new pcl::PointCloud<pcl::PointXYZRGBA>);
+				pcl::copyPointCloud(clustered_corrs[i], *cloudmot);
+				pcl::visualization::PointCloudColorHandlerCustom<PointType> rotated_model_color_handler (cloudmot, 0, 255, 0);
+				viewer.addPointCloud (cloudmot, rotated_model_color_handler, ss_cloud_v.str ());
+			}
+	
+	
+	/*std::cout <<"Drawing boudning box"<<std::endl;
 	//Draw boudning box : 
 	stalker::square sq;
 	sq=cg.getBoundingBox();
@@ -209,7 +231,7 @@ BOOST_AUTO_TEST_CASE(trying)
 	viewer.addLine<PointType, PointType> (p1, p2, 255, 255, 0, ss_line1.str ());
 	viewer.addLine<PointType, PointType> (p2, p3, 255, 255, 0, ss_line2.str ());
 	viewer.addLine<PointType, PointType> (p3, p4, 255, 255, 0, ss_line3.str ());
-	viewer.addLine<PointType, PointType> (p4, p1, 255, 255, 0, ss_line4.str ());
+	viewer.addLine<PointType, PointType> (p4, p1, 255, 255, 0, ss_line4.str ());*/
 	
 
 
