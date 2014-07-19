@@ -117,7 +117,7 @@ void saveCloud(const sensor_msgs::PointCloud2ConstPtr& cloudy, pcl::PointCloud<P
 
 
 void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle& my_node, Main<PointType, Descriptor >* main, ros::Publisher& bb_pub, ros::Publisher& pose_pub, pcl::PointCloud<PointType>::Ptr cloud){
-	if( ros::Time::now()-timestamp>ros::Duration(10)){
+	if( ros::Time::now()-timestamp>ros::Duration(10) && main->gotModel() ){
 		std::cout<<"************************************* Opent TLD did NOT found a Model********************************"<<std::endl;
 		
 		/*Preprocessing here...*/

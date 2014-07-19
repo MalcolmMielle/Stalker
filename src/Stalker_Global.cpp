@@ -2,6 +2,7 @@
 #include "ros/ros.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "std_msgs/Bool.h"
 
 #include "pcl_ros/point_cloud.h"
 #include "pcl/io/ply_io.h"
@@ -20,6 +21,7 @@
 
 #include "stalker/square.h"
 #include "stalker/getobject.h"
+#include "stalker/sentobject.h"
 
 
 #define Descriptor pcl::Histogram<153>
@@ -32,7 +34,9 @@ SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>* cp= new SegmentAndClusterin
 
 std::string frame;
 
+bool search_status=false;
 
+bool flagy=true;
 
 /*******Function********/
 
@@ -109,12 +113,11 @@ void service_client(ros::ServiceClient& client){
 	
 	pose_stamped.header.stamp=ros::Time::now();
 
-	
 	stalker::sentobject srv;
 
-	srv.gotObject=true;
-	srv.request.pose = pose_stamped.pose;
-	srv.request.robot_id="0";
+	srv.request.gotObject=true;
+	srv.request.pose = pose_stamped;
+	srv.request.robot_id=0;
 	
 	srv.response.keepsearching=true;
 
@@ -122,23 +125,25 @@ void service_client(ros::ServiceClient& client){
 		stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose );
 		pose_stamped.header.stamp=ros::Time::now();
 		
-		srv.gotObject=true;
-		srv.request.pose = pose_stamped.pose;
-		srv.request.robot_id="0";
+		srv.request.gotObject=true;
+		srv.request.pose = pose_stamped;
+		srv.request.robot_id=0;
 		if (client.call(srv))
 		{
 		}
 		else
 		{
 			ROS_ERROR("Failed to call service add_two_ints");
-			return 1;
+			//return 1;
 		}
 		i++;
 	}
 	//TODO
 	if(srv.response.keepsearching==false){
-		
-		
+		//Put flagy to false when we found a good object
+		if( search_status==true){
+			flagy=false;
+		}
 	}
 	else if(i>=cp->getRoto().size()){
 		
@@ -149,6 +154,18 @@ void service_client(ros::ServiceClient& client){
 
 	
 }
+
+
+
+void search_callback(const std_msgs::Bool::ConstPtr& boolean){
+	std::cout << "Starting search" << std::endl;
+	search_status=boolean->data;
+	//Put flagy back to true at the end of the searching state
+	if(boolean->data==false){
+		flagy=true;
+	}
+}
+
 
 
 
@@ -207,39 +224,44 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 
 void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub, ros::ServiceClient& client){
 	
-	std::cout<<"************************************* Opent TLD got a Model********************************"<<std::endl;
+	std::cout<<"************************************* Got an image from the main source********************************"<<std::endl;
+	if(search_status==true && flagy==true){
+		std::cout<<"************************************* We need to search said Mother Brain********************************"<<std::endl;
 
-	if(main->gotModel()){
-		pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
-		_scene->is_dense=false;
-		pcl::fromROSMsg(*cloudy, *_scene);
-		//TODO
-		stalker::resizeCloud<PointType>(main->getObject(), _scene);
-		
-		stalker::center<PointType>(main->getObject(), "x");
-		stalker::center<PointType>(main->getObject(), "y");
-		stalker::center<PointType>(main->getObject(), "z");
-		
-		stalker::voirPCL<PointType>(main->getObject(), _scene);
-		
-		sensor_msgs::PointCloud2Ptr pc2(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*_scene, *pc2);
-		
-		/*sensor_msgs::PointCloud2 pc2;
-		pcl::toROSMsg(*cloud_filtered, pc2);*/
-		
-		main->doWork(pc2);
-		
-		if(main->foundObject()){
-		//publish the new bouding box
-			//pose_pub.publish<>();
+		if(main->gotModel()){
+			std::cout<<"Got model"<<std::endl;
+			pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
+			_scene->is_dense=false;
+			pcl::fromROSMsg(*cloudy, *_scene);
+			//TODO
+			stalker::resizeCloud<PointType>(main->getObject(), _scene);
+			
+			stalker::center<PointType>(main->getObject(), "x");
+			stalker::center<PointType>(main->getObject(), "y");
+			stalker::center<PointType>(main->getObject(), "z");
+			
+			stalker::voirPCL<PointType>(main->getObject(), _scene);
+			
+			sensor_msgs::PointCloud2Ptr pc2(new sensor_msgs::PointCloud2());
+			pcl::toROSMsg(*_scene, *pc2);
+			
+			/*sensor_msgs::PointCloud2 pc2;
+			pcl::toROSMsg(*cloud_filtered, pc2);*/
+			
+			main->doWork(pc2);
+			
+			if(main->foundObject()){
+			//publish the new bouding box
+				//pose_pub.publish<>();
 
-			service_client(client);
+				service_client(client);
+			}
+			
 		}
 		
+		timestamp=ros::Time::now();
 	}
 	
-	timestamp=ros::Time::now();
 }
 
 
@@ -256,6 +278,8 @@ int main (int argc, char **argv){
 	ros::NodeHandle my_node;
 	ros::NodeHandle priv_node("~");
 
+	
+	
 	//Timer, Subscriber, Publisher description
 	ros::Timer _imlost;
 	ros::Subscriber pointcloud_sub;
@@ -263,6 +287,7 @@ int main (int argc, char **argv){
 	ros::Subscriber pc_filtered_sub;
 	ros::Subscriber tracker2d_sub;
 	ros::Subscriber trackerfullcloud;
+	ros::Subscriber searching_state;
 	
 	
 	ros::Publisher pose_pub;
@@ -270,7 +295,7 @@ int main (int argc, char **argv){
 	
 	//Service
 	ros::ServiceServer service = my_node.advertiseService("getObject", getPose);
-	ros::ServiceClient client = my_node.serviceClient<stalker::sentObject>("sentobject");
+	ros::ServiceClient client = my_node.serviceClient<stalker::sentobject>("sentobject");
 	ROS_INFO("Ready to give the pose");
 	
 	ros::Timer bomb;
@@ -278,18 +303,16 @@ int main (int argc, char **argv){
 	
 	pcl::PointCloud<PointType>::Ptr cloudy_save;
 	
-	MainGraphic<PointType, Descriptor > main(cp);
-	
-
+	Main<PointType, Descriptor > main;
 	
 	main.setPipeline(cp);
+	ROS_INFO("Going all in");
 	/*******PARAMETERS****************/
 	
-	std::string path2model="/home/malcolm/ros_ws/hydro_ws/catkin_ws/devel/lib/stalker/view_model.pcd";
-
-	std::string where2read="cloud_filtered";
+	std::string path2model="/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd";
+	std::string where2read="camera/depth/points_xyzrgb";
 	//priv_node.param<std::string>("/model", path2model, "none");
-	
+	ROS_INFO("Going for the variables");
 	//main.setResolution(true);
 	/* SPIN IMAGE*/
 	//cp->setPostProcICPThresh(1e-7);
@@ -297,7 +320,7 @@ int main (int argc, char **argv){
 	cp->getScene()->setRadiusDescriptorsEffective(0.05);
 	cp->getObject()->setSamplingSizeEffective(0.01);
 	cp->getScene()->setSamplingSizeEffective(0.01);
-	
+	ROS_INFO("Did all the variables");
 	/*SHOT*/	
 	/*cp->setPostProcICPThresh(1e-7);
 	//cp->getObject()->setRadiusDescriptorsEffective(0.03);
@@ -312,7 +335,7 @@ int main (int argc, char **argv){
 	
 	/***********MODEL****************/
 	if(path2model.compare("none")==0){
-		model_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("model", 1, &MainGraphic<PointType, Descriptor >::loadModel, &main);
+		model_sub = my_node.subscribe<sensor_msgs::PointCloud2> ("model", 1, &Main<PointType, Descriptor >::loadModel, &main);
 	}
 	else{
 		std::cout << "Loading MODEL"<<std::endl;
@@ -320,13 +343,21 @@ int main (int argc, char **argv){
 		pcl::io::loadPCDFile (path2model, *model_pc);
 		main.loadModel(model_pc);
 	}
+	ROS_INFO("Loaded the model");
 	
-	/***********CAMERA IMAGE*********/
-	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub) );
+	
+	
+	/***********Mother Brain Subscriber*********/
+	searching_state = my_node.subscribe<std_msgs::Bool> ("search_state", 1, search_callback);
 
-	bomb=my_node.createTimer(ros::Duration(10), boost::bind(bombCallBack, _1, timeStamp, my_node, &main, newBB_pub, pose_pub, cloudy_save));
+	/***********CAMERA IMAGE*********/
+	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub, client) );
+
 	
-	trackerfullcloud = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, boost::bind(saveCloud, _1,cloudy_save));
+	//Function to usually track the cloud when there is two source and you want to combined them.
+	//bomb=my_node.createTimer(ros::Duration(10), boost::bind(bombCallBack, _1, timeStamp, my_node, &main, newBB_pub, pose_pub, cloudy_save));
+	
+	//trackerfullcloud = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, boost::bind(saveCloud, _1,cloudy_save));
 	
 
 	while(ros::ok()){		
@@ -335,6 +366,7 @@ int main (int argc, char **argv){
 		ros::spinOnce();
 	}
 	
-	delete(cp);
+	std::cout << "Wot"<<std::endl;
+	//delete(cp);
 
 }

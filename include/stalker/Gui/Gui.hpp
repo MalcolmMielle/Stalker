@@ -12,8 +12,12 @@
 #include <iostream>
 #include <pcl/io/io.h>
 
+
 template<typename T, typename DescriptorType>
 class ShapeLocal;
+
+template<typename T, typename DescriptorType>
+class ShapeGlobal;
 
 template<typename T, typename DescriptorType>
 class Shape;
@@ -26,6 +30,9 @@ class CorrespGrouping;
 
 template<typename T, typename DescriptorType>
 class CorrespGroupingBaseBase;
+
+template<typename T, typename DescriptorType>
+class SegmentAndClustering;
 
 #include <pcl/io/pcd_io.h>
 
@@ -73,9 +80,13 @@ class Gui{
 
 	virtual void add(ShapeLocal<T, DescriptorType>& sh)=0;
 	virtual void remove(ShapeLocal<T, DescriptorType>& sh)=0;
+	virtual void add(ShapeGlobal<T, DescriptorType>& sh)=0;
+	virtual void remove(ShapeGlobal<T, DescriptorType>& sh)=0;
 	virtual void printPipeline(CorrespGroupingBaseBase<T, DescriptorType>& p)=0;
+	virtual void printPipeline(SegmentAndClustering<T, DescriptorType>& p)=0;
 	//virtual void printPipeline(CorrespGrouping<T, DescriptorType>& sh)=0;
 	virtual void update(ShapeLocal<T, DescriptorType>& sh)=0;
+	virtual void update(ShapeGlobal<T, DescriptorType>& sh)=0;
 	
 
 

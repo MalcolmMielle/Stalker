@@ -69,8 +69,8 @@ class Shape{
 	virtual void set(typename pcl::PointCloud<T>::Ptr& p){_shape=p;}
 	virtual void setRadiusDescriptors(double r){_descrRad=r;}//Radius given by the user to calculate the descriptors Default 0.02
 	virtual void setSamplingSize(double r){_shape_ss=r;}//shape_sampling size given by the user used to downsample. Default 0.01
-	virtual void setRadiusDescriptorsEffective(double r){_descrRad_effective=r;}//Radius used to calculate the descriptors Default 0.02
-	virtual void setSamplingSizeEffective(double r){_shape_ss_effective=r;}//shape_sampling size used to downsample. Default 0.01
+	virtual void setRadiusDescriptorsEffective(double r){std::cout <<"What"<<std::endl;_descrRad_effective=r;}//Radius used to calculate the descriptors Default 0.02
+	virtual void setSamplingSizeEffective(double r){std::cout <<"What 2"<<std::endl;_shape_ss_effective=r;}//shape_sampling size used to downsample. Default 0.01
 	virtual void setDescriptors(typename pcl::PointCloud<DescriptorType>::Ptr& desc){_desc=desc;}
 	virtual void setNormals(pcl::PointCloud<NormalType>::Ptr& normal){_shape_normals=normal;}
 	virtual void setName(std::string& name){_id=name;}

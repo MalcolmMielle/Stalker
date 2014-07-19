@@ -5,8 +5,11 @@
 
 #include "Gui.hpp"
 #include "Shape3DLocal.hpp"
+#include "Shape3DGlobal.hpp"
+
 #include "CorrespGrouping.hpp"
 #include "CorrespGroupingBase.hpp"
+#include "SegmentAndClustering.hpp"
 template <typename T, typename DescriptorType>
 class Gui1 : public Gui<T, DescriptorType>{
 	
@@ -37,7 +40,25 @@ class Gui1 : public Gui<T, DescriptorType>{
 		Gui<T, DescriptorType>::removePCL(name);
 	}
 	
-	virtual void printKeyPoints(ShapeLocal<T, DescriptorType>& sh){
+	virtual void update(ShapeGlobal<T, DescriptorType>& sh){
+		Gui<T, DescriptorType>::updatePCL(sh.getCloud(), sh.getName());
+		std::string name=sh.getName()+"keypoints";
+		Gui<T, DescriptorType>::updatePCL(sh.getKeypoints(), name);
+	}
+	
+	virtual void add(ShapeGlobal<T, DescriptorType>& sh){
+//		std::cout<<"Adding shape Local "<< sh.getName()<<std::endl;
+		Gui<T, DescriptorType>::addPCL(sh.getCloud(), sh.getName());
+		printKeyPoints(sh);
+	}
+	virtual void remove(ShapeGlobal<T, DescriptorType>& sh){
+		Gui<T, DescriptorType>::removePCL(sh.getName());
+		std::string name=sh.getName()+"keypoints";
+		Gui<T, DescriptorType>::removePCL(name);
+	}
+	
+	
+	virtual void printKeyPoints(Shape<T, DescriptorType>& sh){
 //		std::cout<<"Adding kaypoints"<<std::endl;
 		std::string name=sh.getName()+"keypoints";
 		scene_keypoints_color_handler = pcl::visualization::PointCloudColorHandlerCustom<T> (sh.getKeypoints(), 0, 0, 255);
@@ -85,6 +106,8 @@ class Gui1 : public Gui<T, DescriptorType>{
 		}
 	
 	}
+	
+	virtual void printPipeline(SegmentAndClustering<T, DescriptorType>& p){};
 	
 };
 

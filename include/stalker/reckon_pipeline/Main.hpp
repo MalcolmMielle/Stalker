@@ -111,7 +111,7 @@ class Main{
 	virtual void checkSizeScene();
 	
 	virtual bool gotModel(){
-		if(_object->width>0 && _object->height>0){
+		if(_object->size()!=0){
 			return true;
 		}
 		else{
@@ -396,7 +396,8 @@ inline void Main<T, DescriptorType>::doWork(){
 	
 	/**************************MAIN PIPELINE OF RECOGNITION**********************/
 	if(_whichInterface==1){
-		if(_object->width>0 && _object->height>0 &&_scene->width>0 && _scene->height>0){
+		std::cout<< "Sized : " <<_object->size()<<" "<<_scene->size()<<std::endl;
+		if(_object->size()!=0 && _scene->size()!=0){
 			_pipeline->doPipeline();
 			_pipeline->affiche();
 		}
