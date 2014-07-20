@@ -178,6 +178,16 @@ BOOST_AUTO_TEST_CASE(trying)
 				viewer.addLine<PointType, PointType> (model_point, scene_point, 0, 255, 0, ss_line.str ());
 			}*/
 		}
+		
+		//add a sphere to show the result of the translation
+		std::stringstream ss_sphere;
+		ss_sphere << "instance" << i;
+		pcl::PointXYZ c;
+		Eigen::Matrix4f t = rototranslations[i];
+		c.x = t(0,3);
+		c.y = t(1,3);
+		c.z = t(2,3);
+		viewer.addSphere(c, 0.1f, ss_sphere);
 	}
 	
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudmot (new pcl::PointCloud<pcl::PointXYZRGBA>);
