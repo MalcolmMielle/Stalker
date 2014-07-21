@@ -17,6 +17,7 @@
 #include "tf_conversions/tf_eigen.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "tf/LinearMath/Vector3.h"
+#include <tf/transform_listener.h>
 
 
 /*Typical cues are the percentage of supporting points (i.e., model points that are close to scene points), as well as the percentage of outliers (number of visible points belonging to the models that do not have a counterpart within the scene points). Currently, PCL contains an implementation of the hypothesis verification algorithm proposed in [13]. Figure 3 shows an example where the recognition hypotheses are postprocessed using this method. Other verification strategies have been proposed in the literature
@@ -26,7 +27,7 @@ namespace stalker{
 	
 
 	void calculatePose(Eigen::Matrix4f& transformation_matrix, geometry_msgs::Pose& pose_in,geometry_msgs::Pose& pose_out);
-	
+	double QuatMagnetude(geometry_msgs::Pose& pose_in);
 	
 	
 	template<typename T>
@@ -112,6 +113,49 @@ namespace stalker{
 		
 	}
 	
+	
+	//void TransformListener::transformPose(const std::string & target_frame, const geometry_msgs::PoseStamped & stamped_in, geometry_msgs::PoseStamped & stamped_out ) const
+
+	void calculatePoseBaseLink(Eigen::Matrix4f& transformation_matrix, geometry_msgs::PoseStamped& pose_in,geometry_msgs::PoseStamped& pose_out, tf::TransformListener& listener){
+		
+		calculatePose(transformation_matrix, pose_in.pose, pose_in.pose);
+		
+		//pose_in.header.frame_id="camera";
+		//pose_in.header.stamp=ros::Time::now();
+		pose_out.header=pose_in.header;
+		tf::StampedTransform _transform;
+		
+		try{
+		listener.waitForTransform(pose_in.header.frame_id, "base_link", ros::Time(0), ros::Duration(1));
+		listener.lookupTransform(pose_in.header.frame_id, "base_link", ros::Time(0), _transform);
+		listener.transformPose("base_link", pose_in, pose_out);
+		}
+		catch(tf::TransformException& ex){
+			ROS_ERROR("Received an exception trying to transform pose: %s", ex.what());
+			std::cout << "Quaternion : "<< _transform.getRotation().getW()<<" " << _transform.getRotation().getX()<<" " << _transform.getRotation().getY()<<" "  <<std::endl;
+			std::cout << "Magnitude pose_in : " << QuatMagnetude(pose_in.pose) << std::endl<<"Magnitude pose_out : "<<QuatMagnetude(pose_out.pose)<<std::endl;
+			exit(0);
+			
+		}
+		
+		//std::cout<<"Pose out frame before "<<pose_out.header.frame_id<<std::endl;
+		
+		pose_out.header.frame_id="base_link";
+		pose_in.header.stamp=ros::Time::now();
+		
+		
+		/*try{
+			listener.waitForTransform(pose_in.header.frame_id, "base_link", ros::Time(0), ros::Duration(1));
+			listener.lookupTransform(pose_in.header.frame_id, "base_link", ros::Time(0), _transform);
+		}
+		catch(tf::TransformException& ex){
+			ROS_ERROR("Received an exception trying to transform: %s", ex.what());
+		}*/
+		
+	}
+	
+	
+	
 	//TODO To test
 	void calculatePose(Eigen::Matrix4f& transformation_matrix, geometry_msgs::Pose& pose_in,geometry_msgs::Pose& pose_out ){
 		
@@ -141,6 +185,10 @@ namespace stalker{
 		tfqt_in=pose_tf_in.getRotation();
 		
 		tfqt_in*=tfqt_cal; //final
+		//tfqt_in.normalize();
+		tfqt_in.normalized();
+		
+		std::cout << tfqt_in.getX()<< " "<<tfqt_in.getY()<< " "<< tfqt_in.getZ()<< " "<<tfqt_in.getW();
 		
 		//GET TRANSLATIONS
 		tf::Vector3 vec;
@@ -150,8 +198,6 @@ namespace stalker{
 		
 		vec=vec_in+vec;
 
-		
-		//TODO SOLVE THIS
 		pose_out.position.x=vec.getX();
 		pose_out.position.y=vec.getY();
 		pose_out.position.z=vec.getZ();
@@ -160,11 +206,30 @@ namespace stalker{
 		pose_out.orientation.x=tfqt_in.getX();
 		pose_out.orientation.y=tfqt_in.getY();
 		pose_out.orientation.z=tfqt_in.getZ();
-		pose_out.orientation.x=tfqt_in.getW();
+		pose_out.orientation.w=tfqt_in.getW();
+		
+		std::cout << "pose : "<<pose_out<<std::endl;
+		
+		/*Normalize
+		
+		std::cout<<"Before normalized : "<<QuatMagnetude(pose_out)<<std::endl;
+		double mag=QuatMagnetude(pose_out);
+		pose_out.orientation.x=pose_out.orientation.x/mag;
+		pose_out.orientation.y=pose_out.orientation.y/mag;
+		pose_out.orientation.z=pose_out.orientation.z/mag;
+		pose_out.orientation.x=pose_out.orientation.w/mag;
+		
+		std::cout<<"After normalized : "<<QuatMagnetude(pose_out)<<std::endl;*/
 
 	}
 	
 
+	double QuatMagnetude(geometry_msgs::Pose& pose_in){
+		return sqrt( (pose_in.orientation.x*pose_in.orientation.x) + (pose_in.orientation.y*pose_in.orientation.y) + (pose_in.orientation.z*pose_in.orientation.z) + (pose_in.orientation.w*pose_in.orientation.w) );
+	}
+	
+	
+	
 
 }
 

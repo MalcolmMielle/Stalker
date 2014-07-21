@@ -19,6 +19,8 @@
 #include <SegmentAndClustering.hpp>
 #include <Shape3DGlobal.hpp>
 
+#include <tf/transform_listener.h>
+
 #include "stalker/square.h"
 #include "stalker/getobject.h"
 #include "stalker/sentobject.h"
@@ -64,6 +66,7 @@ bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &re
 		pose_stamped.pose.orientation.w=1;
 		
 		//TODO What if multiples objects ?
+		//Calculate the pose compared the base link... 
 		stalker::calculatePose(cp->getRoto()[0], pose_stamped.pose ,pose_stamped.pose );
 		
 		pose_stamped.header.stamp=ros::Time::now();
@@ -92,7 +95,7 @@ bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &re
 
 //TODO A TESTER PARCE QUE CODER EN 5 SECONDES.
 
-void service_client(ros::ServiceClient& client){
+void service_client(ros::ServiceClient& client, tf::TransformListener* listener){
 	
 	int i=0;
 	geometry_msgs::PoseStamped pose_stamped;
@@ -109,7 +112,7 @@ void service_client(ros::ServiceClient& client){
 	pose_stamped.pose.orientation.w=1;
 	
 	//TODO What if multiples objects ?
-	stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose );
+	stalker::calculatePoseBaseLink(cp->getRoto()[i], pose_stamped ,pose_stamped, *listener );
 	
 	pose_stamped.header.stamp=ros::Time::now();
 
@@ -120,36 +123,43 @@ void service_client(ros::ServiceClient& client){
 	srv.request.robot_id=0;
 	
 	srv.response.keepsearching=true;
-
-	while(srv.response.keepsearching && i<cp->getRoto().size() ){
-		stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose );
-		pose_stamped.header.stamp=ros::Time::now();
-		
-		srv.request.gotObject=true;
-		srv.request.pose = pose_stamped;
-		srv.request.robot_id=0;
-		if (client.call(srv))
-		{
+	if (cp->getRoto().size()>0){
+		while(srv.response.keepsearching && i<cp->getRoto().size() ){
+			stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose );
+			pose_stamped.header.stamp=ros::Time::now();
+			
+			srv.request.gotObject=true;
+			srv.request.pose = pose_stamped;
+			srv.request.robot_id=0;
+			if (client.call(srv))
+			{
+				ROS_INFO("Search done ");
+				std::cout << "response searching : "<<srv.response.keepsearching<<std::endl;
+			}
+			else
+			{
+				ROS_ERROR("Failed to call service searching state");
+				//return 1;
+			}
+			i++;
+			std::cout <<"Looping for the service of searching "<<std::endl;
 		}
-		else
-		{
-			ROS_ERROR("Failed to call service add_two_ints");
-			//return 1;
+		//TODO
+		if(srv.response.keepsearching==false){
+			//Put flagy to false when we found a good object
+			if( search_status==true){
+				flagy=false;
+			}
 		}
-		i++;
-	}
-	//TODO
-	if(srv.response.keepsearching==false){
-		//Put flagy to false when we found a good object
-		if( search_status==true){
-			flagy=false;
+		else if(i>=cp->getRoto().size()){
+			std::cout <<"All position and object in the camera vision have been found"<<std::endl;
 		}
-	}
-	else if(i>=cp->getRoto().size()){
-		
+		else{
+			std::cout <<"No idea what happened"<<std::endl;
+		}
 	}
 	else{
-		
+		std::cout<< "No correspondance"<<std::endl;
 	}
 
 	
@@ -204,6 +214,7 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 			//pose_stamped.pose.position.y=0;
 			//pose_stamped.pose.position.z=0;
 			
+
 			//pose_stamped.pose.orientation.x=0;
 			//pose_stamped.pose.orientation.y=0;
 			//pose_stamped.pose.orientation.z=0;
@@ -222,7 +233,7 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 	
 }
 
-void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub, ros::ServiceClient& client){
+void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub, ros::ServiceClient& client, tf::TransformListener* listener){
 	
 	std::cout<<"************************************* Got an image from the main source********************************"<<std::endl;
 	if(search_status==true && flagy==true){
@@ -233,28 +244,31 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 			pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
 			_scene->is_dense=false;
 			pcl::fromROSMsg(*cloudy, *_scene);
-			//TODO
-			stalker::resizeCloud<PointType>(main->getObject(), _scene);
+			
+			//Resize valid only for OpenTLD
+			/*stalker::resizeCloud<PointType>(main->getObject(), _scene);
 			
 			stalker::center<PointType>(main->getObject(), "x");
 			stalker::center<PointType>(main->getObject(), "y");
-			stalker::center<PointType>(main->getObject(), "z");
+			stalker::center<PointType>(main->getObject(), "z");*/
 			
-			stalker::voirPCL<PointType>(main->getObject(), _scene);
+			//TODO BUG
+			/*stalker::voirPCL<PointType>(main->getObject(), _scene);
 			
 			sensor_msgs::PointCloud2Ptr pc2(new sensor_msgs::PointCloud2());
-			pcl::toROSMsg(*_scene, *pc2);
+			pcl::toROSMsg(*_scene, *pc2);*/
 			
 			/*sensor_msgs::PointCloud2 pc2;
 			pcl::toROSMsg(*cloud_filtered, pc2);*/
 			
-			main->doWork(pc2);
+			main->doWork(cloudy);
+			
 			
 			if(main->foundObject()){
 			//publish the new bouding box
 				//pose_pub.publish<>();
-
-				service_client(client);
+				frame=cloudy->header.frame_id;
+				service_client(client, listener);
 			}
 			
 		}
@@ -292,6 +306,8 @@ int main (int argc, char **argv){
 	
 	ros::Publisher pose_pub;
 	ros::Publisher newBB_pub;
+	
+	tf::TransformListener listener(ros::Duration(10));
 	
 	//Service
 	ros::ServiceServer service = my_node.advertiseService("getObject", getPose);
@@ -351,7 +367,7 @@ int main (int argc, char **argv){
 	searching_state = my_node.subscribe<std_msgs::Bool> ("search_state", 1, search_callback);
 
 	/***********CAMERA IMAGE*********/
-	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub, client) );
+	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub, client, &listener) );
 
 	
 	//Function to usually track the cloud when there is two source and you want to combined them.
