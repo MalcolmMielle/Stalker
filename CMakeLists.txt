@@ -188,9 +188,9 @@ add_definitions(${PCL_DEFINITIONS})
 #target_link_libraries(stalker_node_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 #add_dependencies(stalker_node_tld stalker_generate_messages_cpp)
 
-#add_executable(stalker_global_tld src/Stalker_Global.cpp)
-#target_link_libraries(stalker_global_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-#add_dependencies(stalker_global_tld stalker_generate_messages_cpp)
+add_executable(stalker_global_tld src/Stalker_Global.cpp)
+target_link_libraries(stalker_global_tld ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(stalker_global_tld stalker_generate_messages_cpp)
 
 add_executable(stalker_global_test src/Test/StalkerGlobalTest.cpp)
 target_link_libraries(stalker_global_test ${catkin_LIBRARIES} ${PCL_LIBRARIES})

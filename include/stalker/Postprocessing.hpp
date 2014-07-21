@@ -116,7 +116,7 @@ namespace stalker{
 	
 	//void TransformListener::transformPose(const std::string & target_frame, const geometry_msgs::PoseStamped & stamped_in, geometry_msgs::PoseStamped & stamped_out ) const
 
-	void calculatePoseBaseLink(Eigen::Matrix4f& transformation_matrix, geometry_msgs::PoseStamped& pose_in,geometry_msgs::PoseStamped& pose_out, tf::TransformListener& listener){
+	void calculatePoseBaseLink(Eigen::Matrix4f& transformation_matrix, geometry_msgs::PoseStamped& pose_in,geometry_msgs::PoseStamped& pose_out, tf::TransformListener& listener, std::string& to){
 		
 		calculatePose(transformation_matrix, pose_in.pose, pose_in.pose);
 		
@@ -126,9 +126,9 @@ namespace stalker{
 		tf::StampedTransform _transform;
 		
 		try{
-		listener.waitForTransform(pose_in.header.frame_id, "base_link", ros::Time(0), ros::Duration(1));
-		listener.lookupTransform(pose_in.header.frame_id, "base_link", ros::Time(0), _transform);
-		listener.transformPose("base_link", pose_in, pose_out);
+		listener.waitForTransform(pose_in.header.frame_id, to, ros::Time(0), ros::Duration(1));
+		listener.lookupTransform(pose_in.header.frame_id, to, ros::Time(0), _transform);
+		listener.transformPose(to, pose_in, pose_out);
 		}
 		catch(tf::TransformException& ex){
 			ROS_ERROR("Received an exception trying to transform pose: %s", ex.what());
@@ -140,7 +140,7 @@ namespace stalker{
 		
 		//std::cout<<"Pose out frame before "<<pose_out.header.frame_id<<std::endl;
 		
-		pose_out.header.frame_id="base_link";
+		pose_out.header.frame_id=to;
 		pose_in.header.stamp=ros::Time::now();
 		
 		

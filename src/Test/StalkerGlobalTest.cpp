@@ -95,7 +95,7 @@ bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &re
 
 //TODO A TESTER PARCE QUE CODER EN 5 SECONDES.
 
-void service_client(ros::ServiceClient& client, tf::TransformListener* listener, std::string& to){
+void service_client(ros::ServiceClient& client, tf::TransformListener* listener, std::string& to, int id){
 	
 	int i=0;
 	geometry_msgs::PoseStamped pose_stamped;
@@ -126,9 +126,24 @@ void service_client(ros::ServiceClient& client, tf::TransformListener* listener,
 		pose_stamped.header.stamp=ros::Time::now();
 		
 		
+		
+		//TESTING///
+		pose_stamped.pose.position.x=id+1;
+		pose_stamped.pose.position.y=0;
+		pose_stamped.pose.position.z=0;
+		
+		pose_stamped.pose.orientation.x=0;
+		pose_stamped.pose.orientation.y=0;
+		pose_stamped.pose.orientation.z=0;
+		pose_stamped.pose.orientation.w=1;
+		
+		std::cout <<"Sending : "<<	pose_stamped.pose << " size CP : "<<cp->getRoto().size() <<std::endl;
+		///////////
+		
+		
 		srv.request.gotObject=true;
 		srv.request.pose = pose_stamped;
-		srv.request.robot_id=0;
+		srv.request.robot_id=id;
 		if (client.call(srv))
 		{
 			ROS_INFO("Search done ");
@@ -147,6 +162,7 @@ void service_client(ros::ServiceClient& client, tf::TransformListener* listener,
 		//Put flagy to false when we found a good object
 		if( search_status==true){
 			flagy=false;
+			std::cout<<"search status "<<search_status<<std::endl;
 		}
 	}
 	else if(i>=cp->getRoto().size()){
@@ -164,7 +180,7 @@ void service_client(ros::ServiceClient& client, tf::TransformListener* listener,
 
 
 void search_callback(const std_msgs::Bool::ConstPtr& boolean){
-	std::cout << "Starting search" << std::endl;
+	//std::cout << "Starting search" << std::endl;
 	search_status=boolean->data;
 	//Put flagy back to true at the end of the searching state
 	if(boolean->data==false){
@@ -229,9 +245,10 @@ void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle&
 	
 }
 
-void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub, ros::ServiceClient& client, tf::TransformListener* listener, std::string& to){
+void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub, ros::ServiceClient& client, tf::TransformListener* listener, std::string& to, int id){
 	
 	std::cout<<"************************************* Got an image from the main source********************************"<<std::endl;
+	std::cout << "flags : "<<search_status<<" "<<flagy<<std::endl;
 	if(search_status==true && flagy==true){
 		std::cout<<"************************************* We need to search said Mother Brain********************************"<<std::endl;
 
@@ -264,7 +281,7 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 			//publish the new bouding box
 				//pose_pub.publish<>();
 				frame=cloudy->header.frame_id;
-				service_client(client, listener, to);
+				service_client(client, listener, to, id);
 			}
 			
 		}
@@ -322,9 +339,16 @@ int main (int argc, char **argv){
 	/*******PARAMETERS****************/
 	
 	std::string path2model="/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd";
-	std::string where2read="/camera/depth/points_xyzrgb";
+	std::string where2read="camera/depth/points_xyzrgb";
+	std::string base="base_frame_id";
+	std::string id_topic="id";
 	std::string to;
-	priv_node.param<std::string>("base_frame_id", to, "base_link");
+	int id;
+	priv_node.param<std::string>(base, to, "base_link");
+	priv_node.param<int>(id_topic, id, 0);
+
+	
+
 	//priv_node.param<std::string>("/model", path2model, "none");
 	ROS_INFO("Going for the variables");
 	//main.setResolution(true);
@@ -365,7 +389,7 @@ int main (int argc, char **argv){
 	searching_state = my_node.subscribe<std_msgs::Bool> ("/search_state", 1, search_callback);
 
 	/***********CAMERA IMAGE*********/
-	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub, client, &listener, to) );
+	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub, client, &listener, to, id) );
 
 	
 	//Function to usually track the cloud when there is two source and you want to combined them.
@@ -384,11 +408,3 @@ int main (int argc, char **argv){
 	//delete(cp);
 
 }
-
-
-
-
-
-
-
-
