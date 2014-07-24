@@ -256,7 +256,7 @@ int main (int argc, char **argv){
 	ROS_INFO("Going all in");
 	/*******PARAMETERS****************/
 	
-	std::string path2model="/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd";
+	std::string path2model="/home/robot/catkin_ws/src/Stalker/src/Test/milk.pcd";
 	std::string where2read="camera/depth/points_xyzrgb";
 	std::string base="base_frame_id";
 	std::string id_topic="id";
