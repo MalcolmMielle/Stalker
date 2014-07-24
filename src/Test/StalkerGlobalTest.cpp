@@ -46,9 +46,9 @@ bool flagy=true;
 
 /**************µCALLBACKS************************/
 
-//Service Server
+//Service Server Old not useful anymore
 
-bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &res){
+/*bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &res){
 	ROS_INFO("Request");
 	
 	if(req.ask==true && cp->foundObject()){
@@ -76,19 +76,7 @@ bool getPose(stalker::getobject::Request  &req, stalker::getobject::Response &re
 		res.who="Stalker";		
 	}	
 	
-	/*if(!strcmp(req.order.c_str(),"face")){
-		modelPath=req.model;
-		tld->release();
-		tld->readFromFile(modelPath);
-	}
-	else if(!strcmp(req.order.c_str(),"stoplook")){
-		ROS_INFO("Stop la reconnaissance");
-		tld->release();
-	}	
-	res.answer=req.order;
-	return true;*/
-	
-}
+}*/
 
 
 //TODO Service CLIENT : 
@@ -111,23 +99,20 @@ void service_client(ros::ServiceClient& client, tf::TransformListener* listener,
 	pose_stamped.pose.orientation.z=0;
 	pose_stamped.pose.orientation.w=1;
 	
-	//TODO What if multiples objects ?
-	stalker::calculatePoseBaseLink(cp->getRoto()[i], pose_stamped ,pose_stamped, *listener, to );
-	
-	pose_stamped.header.stamp=ros::Time::now();
-
 	stalker::sentobject srv;
 
 	srv.response.keepsearching=true;
 	
 	//while(srv.response.keepsearching && i<cp->getRoto().size() )
 	while(srv.response.keepsearching && i<1 ){
-		stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose );
+		//No need to actually do the conversion... We can send any frame id to move_base later
+		//stalker::calculatePoseBaseLink(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose, *listener, to );
+		stalker::calculatePose(cp->getRoto()[i], pose_stamped.pose ,pose_stamped.pose);
 		pose_stamped.header.stamp=ros::Time::now();
 		
-		
-		
 		//TESTING///
+		pose_stamped.header.frame_id="base_link";
+		
 		pose_stamped.pose.position.x=id+1;
 		pose_stamped.pose.position.y=0;
 		pose_stamped.pose.position.z=0;
@@ -172,11 +157,7 @@ void service_client(ros::ServiceClient& client, tf::TransformListener* listener,
 		std::cout <<"No idea what happened"<<std::endl;
 	}
 	
-	
-
-	
 }
-
 
 
 void search_callback(const std_msgs::Bool::ConstPtr& boolean){
@@ -188,62 +169,6 @@ void search_callback(const std_msgs::Bool::ConstPtr& boolean){
 	}
 }
 
-
-
-
-void saveCloud(const sensor_msgs::PointCloud2ConstPtr& cloudy, pcl::PointCloud<PointType>::Ptr cloud){
-	 pcl::fromROSMsg(*cloudy, *cloud); 
-	 frame=cloudy->header.frame_id;
-}
-
-
-
-
-void bombCallBack(const ros::TimerEvent&, ros::Time& timestamp, ros::NodeHandle& my_node, Main<PointType, Descriptor >* main, ros::Publisher& bb_pub, ros::Publisher& pose_pub, pcl::PointCloud<PointType>::Ptr cloud){
-	if( ros::Time::now()-timestamp>ros::Duration(10)){
-		std::cout<<"************************************* Opent TLD did NOT found a Model********************************"<<std::endl;
-		
-		/*Preprocessing here...*/
-		
-		stalker::passThrough<PointType>(cloud, cloud, "z", 0.8, 3.5);
-		stalker::statisticalOutilerRemoval<PointType>(cloud, cloud, 50, 1.0);
-		
-		main->doWork(cloud);
-		
-		//if(main->foundObject()){
-		
-			/*** BOUNDING BOX****/
-			//stalker::square square=cp->getBoundingBox();
-			//bb_pub.publish<stalker::square>(square);
-			
-			/****POSE****/
-			//TODO For now it assumed that the model is centered at the begining. Need the either automatise the process or to calculate the first pose.
-			//geometry_msgs::PoseStamped pose_stamped;
-			
-			//pose_stamped.header.frame_id=frame;
-			
-			//pose_stamped.pose.position.x=0;
-			//pose_stamped.pose.position.y=0;
-			//pose_stamped.pose.position.z=0;
-			
-
-			//pose_stamped.pose.orientation.x=0;
-			//pose_stamped.pose.orientation.y=0;
-			//pose_stamped.pose.orientation.z=0;
-			//pose_stamped.pose.orientation.w=1;
-			
-			//TODO What if multiples objects ?
-			//stalker::calculatePose(cp->getRoto()[0], pose_stamped.pose ,pose_stamped.pose );
-			
-			//pose_stamped.header.stamp=ros::Time::now();
-			
-			//pose_pub.publish<geometry_msgs::PoseStamped>(pose_stamped);
-		//}
-		
-	}
-	
-	
-}
 
 void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timestamp, Main<PointType, Descriptor >* main, ros::Publisher& pose_pub, ros::ServiceClient& client, tf::TransformListener* listener, std::string& to, int id){
 	
@@ -257,22 +182,6 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 			pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
 			_scene->is_dense=false;
 			pcl::fromROSMsg(*cloudy, *_scene);
-			
-			//Resize valid only for OpenTLD
-			/*stalker::resizeCloud<PointType>(main->getObject(), _scene);
-			
-			stalker::center<PointType>(main->getObject(), "x");
-			stalker::center<PointType>(main->getObject(), "y");
-			stalker::center<PointType>(main->getObject(), "z");*/
-			
-			//TODO BUG
-			/*stalker::voirPCL<PointType>(main->getObject(), _scene);
-			
-			sensor_msgs::PointCloud2Ptr pc2(new sensor_msgs::PointCloud2());
-			pcl::toROSMsg(*_scene, *pc2);*/
-			
-			/*sensor_msgs::PointCloud2 pc2;
-			pcl::toROSMsg(*cloud_filtered, pc2);*/
 			
 			main->doWork(cloudy);
 			
@@ -323,7 +232,7 @@ int main (int argc, char **argv){
 	tf::TransformListener listener(ros::Duration(10));
 	
 	//Service
-	ros::ServiceServer service = my_node.advertiseService("/getObject", getPose);
+	//ros::ServiceServer service = my_node.advertiseService("/getObject", getPose);
 	ros::ServiceClient client = my_node.serviceClient<stalker::sentobject>("/sentobject");
 	ROS_INFO("Ready to give the pose");
 	
@@ -383,28 +292,17 @@ int main (int argc, char **argv){
 	}
 	ROS_INFO("Loaded the model");
 	
-	
-	
 	/***********Mother Brain Subscriber*********/
 	searching_state = my_node.subscribe<std_msgs::Bool> ("/search_state", 1, search_callback);
 
 	/***********CAMERA IMAGE*********/
 	pointcloud_sub = my_node.subscribe<sensor_msgs::PointCloud2> (where2read, 1, boost::bind(mainCall, _1, timeStamp, &main, pose_pub, client, &listener, to, id) );
 
-	
-	//Function to usually track the cloud when there is two source and you want to combined them.
-	//bomb=my_node.createTimer(ros::Duration(10), boost::bind(bombCallBack, _1, timeStamp, my_node, &main, newBB_pub, pose_pub, cloudy_save));
-	
-	//trackerfullcloud = my_node.subscribe<sensor_msgs::PointCloud2> ("camera/depth/points_xyzrgb", 1, boost::bind(saveCloud, _1,cloudy_save));
-	
 
 	while(ros::ok()){		
 		
 		
 		ros::spinOnce();
 	}
-	
-	std::cout << "Wot"<<std::endl;
-	//delete(cp);
 
 }
