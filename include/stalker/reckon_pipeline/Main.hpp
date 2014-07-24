@@ -171,6 +171,7 @@ class Main{
 	virtual void loadModel(const sensor_msgs::PointCloud2ConstPtr& cloudy);
 	virtual void loadModel(const typename pcl::PointCloud<T>::Ptr cloudy);
 	virtual void doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy); 
+	virtual void doWork(sensor_msgs::PointCloud2 cloudy);
 	virtual void doWork(const typename pcl::PointCloud<T>::Ptr cloudy);
 	virtual void doWork();
 	
@@ -354,6 +355,26 @@ template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy){
 	
 	pcl::fromROSMsg(*cloudy, *_scene);
+	
+	/**************************************************/
+	//TAKE THE RESOLUTION FROM THE MODEL HERE !//
+	
+	/**************************************************/
+	
+	if(_whichInterface==1){
+		_pipeline->setScene(_scene);
+	}
+	else{
+		addScene(_scene);
+	}
+	
+	doWork();
+}
+
+template <typename T, typename DescriptorType>
+inline void Main<T, DescriptorType>::doWork(sensor_msgs::PointCloud2 cloudy){
+	
+	pcl::fromROSMsg(cloudy, *_scene);
 	
 	/**************************************************/
 	//TAKE THE RESOLUTION FROM THE MODEL HERE !//

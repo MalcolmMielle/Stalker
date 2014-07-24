@@ -18,6 +18,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "tf/LinearMath/Vector3.h"
 #include <tf/transform_listener.h>
+#include "sensor_msgs/point_cloud_conversion.h"
 
 
 /*Typical cues are the percentage of supporting points (i.e., model points that are close to scene points), as well as the percentage of outliers (number of visible points belonging to the models that do not have a counterpart within the scene points). Currently, PCL contains an implementation of the hypothesis verification algorithm proposed in [13]. Figure 3 shows an example where the recognition hypotheses are postprocessed using this method. Other verification strategies have been proposed in the literature
@@ -134,7 +135,6 @@ namespace stalker{
 			ROS_ERROR("Received an exception trying to transform pose: %s", ex.what());
 			std::cout << "Quaternion : "<< _transform.getRotation().getW()<<" " << _transform.getRotation().getX()<<" " << _transform.getRotation().getY()<<" "  <<std::endl;
 			std::cout << "Magnitude pose_in : " << QuatMagnetude(pose_in.pose) << std::endl<<"Magnitude pose_out : "<<QuatMagnetude(pose_out.pose)<<std::endl;
-			exit(0);
 			
 		}
 		
@@ -227,6 +227,27 @@ namespace stalker{
 	double QuatMagnetude(geometry_msgs::Pose& pose_in){
 		return sqrt( (pose_in.orientation.x*pose_in.orientation.x) + (pose_in.orientation.y*pose_in.orientation.y) + (pose_in.orientation.z*pose_in.orientation.z) + (pose_in.orientation.w*pose_in.orientation.w) );
 	}
+	
+	
+	void cutPointCloudForMap(const sensor_msgs::PointCloud2& cloud_in, sensor_msgs::PointCloud2& cloud_out, tf::TransformListener& listener){
+		sensor_msgs::PointCloud pcloud;
+		sensor_msgs::convertPointCloud2ToPointCloud(cloud_in, pcloud);
+		try{
+		listener.waitForTransform(cloud_in.header.frame_id, "/map", ros::Time(0), ros::Duration(1));
+		//listener.lookupTransform(pose_in.header.frame_id, to, ros::Time(0), _transform);
+		listener.transformPointCloud("/map", pcloud, pcloud);
+		}
+		catch(tf::TransformException& ex){
+			ROS_ERROR("Received an exception trying to transform pose: %s", ex.what());
+			exit(0);
+			
+		}
+		sensor_msgs::convertPointCloudToPointCloud2(pcloud, cloud_out);
+		
+	}
+	
+	
+	
 	
 	
 	

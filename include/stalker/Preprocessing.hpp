@@ -26,7 +26,7 @@ namespace stalker
 	void removeNanNormals(typename pcl::PointCloud<T>& cloud, typename pcl::PointCloud<T>& cloud_out);
 	
 	template<typename T>
-	void passThrough(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, const std::string& axis, int limits1, int limits2);
+	void passThrough(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, const std::string& axis, double limits1, double limits2);
 	
 	template<typename T>
 	void statisticalOutilerRemoval(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, int nneighbor, double thresh);
@@ -119,7 +119,7 @@ namespace stalker
 	}
 
 	template<typename T>
-	void passThrough(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, const std::string& axis, int limits1, int limits2){
+	void passThrough(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, const std::string& axis, double limits1, double limits2){
 		pcl::PassThrough<T> pass_x;
 		pass_x.setInputCloud (cloud);
 		pass_x.setFilterFieldName (axis);

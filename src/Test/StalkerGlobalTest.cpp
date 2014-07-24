@@ -179,17 +179,26 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 
 		if(main->gotModel()){
 			std::cout<<"Got model"<<std::endl;
+			 
+			sensor_msgs::PointCloud2 pointcloud;
+			pointcloud.header.frame_id="/map";
+			stalker::cutPointCloudForMap(*cloudy, pointcloud, *listener);
+					
 			pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
 			_scene->is_dense=false;
-			pcl::fromROSMsg(*cloudy, *_scene);
+			pcl::fromROSMsg(pointcloud, *_scene);
 			
-			main->doWork(cloudy);
+			stalker::passThrough<PointType>(_scene, _scene, "x", -10, 10);
+			stalker::passThrough<PointType>(_scene, _scene, "y", -10, 10);
+			
+			
+			main->doWork(_scene);
 			
 			
 			if(main->foundObject()){
 			//publish the new bouding box
 				//pose_pub.publish<>();
-				frame=cloudy->header.frame_id;
+				frame=pointcloud.header.frame_id;
 				service_client(client, listener, to, id);
 			}
 			
