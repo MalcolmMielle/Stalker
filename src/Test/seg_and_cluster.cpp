@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(trying)
 		viewer.addPointCloud (off_scene_model, off_scene_model_color_handler, "off_scene_model");
 	}
 
-	if (show_keypoints_)
+	/*if (show_keypoints_)
 	{
 		pcl::visualization::PointCloudColorHandlerCustom<PointType> scene_keypoints_color_handler (scene_keypoints, 0, 0, 255);
 		viewer.addPointCloud (scene_keypoints, scene_keypoints_color_handler, "scene_keypoints");
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(trying)
 		pcl::visualization::PointCloudColorHandlerCustom<PointType> off_scene_model_keypoints_color_handler (off_scene_model_keypoints, 0, 0, 255);
 		viewer.addPointCloud (off_scene_model_keypoints, off_scene_model_keypoints_color_handler, "off_scene_model_keypoints");
 		viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "off_scene_model_keypoints");
-	}
+	}*/
 
 	for (size_t i = 0; i < rototranslations.size (); ++i)
 	{
@@ -187,19 +187,19 @@ BOOST_AUTO_TEST_CASE(trying)
 		c.x = t(0,3);
 		c.y = t(1,3);
 		c.z = t(2,3);
-		viewer.addSphere(c, 0.1f, ss_sphere);
+		viewer.addSphere(c, 0.1, ss_sphere.str());
 	}
 	
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudmot (new pcl::PointCloud<pcl::PointXYZRGBA>);
 	
-	for (size_t i = 0; i < clustered_corrs.size (); ++i){
+	/*for (size_t i = 0; i < clustered_corrs.size (); ++i){
 				std::stringstream ss_cloud_v;
 				ss_cloud_v << "cluster" << i;
 				pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudmot (new pcl::PointCloud<pcl::PointXYZRGBA>);
 				pcl::copyPointCloud(clustered_corrs[i], *cloudmot);
 				pcl::visualization::PointCloudColorHandlerCustom<PointType> rotated_model_color_handler (cloudmot, 0, 255, 0);
 				viewer.addPointCloud (cloudmot, rotated_model_color_handler, ss_cloud_v.str ());
-			}
+			}*/
 	
 	
 	/*std::cout <<"Drawing boudning box"<<std::endl;
