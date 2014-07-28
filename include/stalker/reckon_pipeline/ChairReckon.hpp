@@ -86,10 +86,7 @@ inline void ChairRecon<T, DescriptorTypes>::doPipeline()
 		std::cout<<"trimming "<< cut_at << " "<< y_max<<std::endl;
 		stalker::passThrough<T>(shape, cloud_trimmed, "y", cut_at, y_max);
 		
-		std::cout << "working on trimmed pcl "<<std::endl;
-		/*pcl::copyPointCloud(cloud_trimmed, vec, *shape);
-		stalker::voirPCL<T>(shape, shape);*/
-		stalker::voirPCL<T>(cloud_trimmed, cloud_trimmed);
+		
 		
 		
 		//Clustering/Distance calculation
@@ -98,11 +95,18 @@ inline void ChairRecon<T, DescriptorTypes>::doPipeline()
 			flag_cluster=clustering(cloud_trimmed);
 			cut_at=(cut_at+y_min)/2;
 			ii++;
+			std::cout<<"in"<<std::endl;
 		}
 		
+		std::cout << "working on trimmed pcl "<<std::endl;
+		/*pcl::copyPointCloud(cloud_trimmed, vec, *shape);
+		stalker::voirPCL<T>(shape, shape);*/
+		stalker::voirPCL<T>(cloud_trimmed, cloud_trimmed);
+		
 		// Calculate Point
-		if(flag_cluster==false){
+		if(flag_cluster==false || ii>=15){
 			//We did not find any chair in the end... :(
+			std::cout<<"did not found any chair"<<std::endl;
 		}
 		else{
 			//We see 3 or four legs
@@ -371,7 +375,7 @@ inline bool ChairRecon<T, DescriptorTypes>::clustering(typename pcl::PointCloud<
     //extract each cluster
 	//Need at least 3 leg for now !
 	if(all_clusters_indices.size()>2 && all_clusters_indices.size()<5){
-		
+		std::cout<<"we have NUMBER OF CLUSTER !!!! "<<all_clusters_indices.size()<<std::endl;
 		pcl::PointCloud<T> cluster;
 		for(unsigned int i = 0; i < all_clusters_indices.size(); ++i)
 		{

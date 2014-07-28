@@ -306,7 +306,7 @@ namespace stalker
 			std::cout<<"Cloud not organized "<<axis.compare("x")<<" "<<cloud->width<<std::endl;
 			for (int h=0; h<cloud->width; h++) {
 				if(axis.compare("x")==0){ 
-					std::cout<<"checking x"<<std::endl;
+					//std::cout<<"checking x"<<std::endl;
 					if(isnan(min)){
 						min=cloud->points[h].x;
 					}
