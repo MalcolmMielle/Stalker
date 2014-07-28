@@ -19,12 +19,11 @@
 
 template <typename T, typename DescriptorTypes>
 class SegmentAndClustering : public Pipeline<T, DescriptorTypes> {
-private:
+public:
     //store the pose of the custers
     std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > _rototranslations;
     std::vector<typename pcl::PointCloud<T> > _clusters;
 
-public:
     //reimplement the virtual function
     
     SegmentAndClustering(ShapeGlobal<T, DescriptorTypes>* object, ShapeGlobal<T, DescriptorTypes>* scene) : Pipeline<T, DescriptorTypes>(object, scene) {};
