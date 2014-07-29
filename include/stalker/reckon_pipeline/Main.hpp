@@ -353,7 +353,7 @@ inline void Main<T, DescriptorType>::loadModel(const typename pcl::PointCloud<T>
 
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstPtr& cloudy){
-	
+	std::cout<<"doWork"<<std::endl;
 	pcl::fromROSMsg(*cloudy, *_scene);
 	
 	/**************************************************/
@@ -373,7 +373,7 @@ inline void Main<T, DescriptorType>::doWork(const sensor_msgs::PointCloud2ConstP
 
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(sensor_msgs::PointCloud2 cloudy){
-	
+	std::cout<<"doWork"<<std::endl;
 	pcl::fromROSMsg(cloudy, *_scene);
 	
 	/**************************************************/
@@ -393,7 +393,7 @@ inline void Main<T, DescriptorType>::doWork(sensor_msgs::PointCloud2 cloudy){
 
 template <typename T, typename DescriptorType>
 inline void Main<T, DescriptorType>::doWork(const typename pcl::PointCloud<T>::Ptr cloudy){
-	
+	std::cout<<"doWork"<<std::endl;
 	_scene=cloudy;
 	
 	/**************************************************/

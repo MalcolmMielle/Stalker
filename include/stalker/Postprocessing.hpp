@@ -233,7 +233,9 @@ namespace stalker{
 		sensor_msgs::PointCloud pcloud;
 		sensor_msgs::convertPointCloud2ToPointCloud(cloud_in, pcloud);
 		try{
-		listener.waitForTransform(cloud_in.header.frame_id, "/map", ros::Time(0), ros::Duration(1000));
+			std::cout<<"Mait for trans between "<<cloud_in.header.frame_id<< " and mp "<<std::endl;;
+		listener.waitForTransform(cloud_in.header.frame_id, "/map", ros::Time(0), ros::Duration(1));
+		std::cout <<"Done"<<std::endl;
 		//listener.lookupTransform(pose_in.header.frame_id, to, ros::Time(0), _transform);
 		listener.transformPointCloud("/map", pcloud, pcloud);
 		}

@@ -167,8 +167,10 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 			 
 			sensor_msgs::PointCloud2 pointcloud;
 			pointcloud.header.frame_id="/map";
+			std::cout<<"Cut from map"<<std::endl;
 			stalker::cutPointCloudForMap(*cloudy, pointcloud, *listener);
-					
+			std::cout<<"End cut from map"<<std::endl;
+			
 			pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
 			_scene->is_dense=false;
 			pcl::fromROSMsg(pointcloud, *_scene);
