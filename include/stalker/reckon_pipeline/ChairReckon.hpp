@@ -62,29 +62,29 @@ inline void ChairRecon<T, DescriptorTypes>::doPipeline()
 		
 		double y_max;
 		double y_min;
-		double x_min;
-		double x_max;
+		double z_min;
+		double z_max;
 		bool flag_cluster=false;
 		float distance;
 		
 		typename pcl::PointCloud<T>::Ptr cloud_trimmed(new pcl::PointCloud<T>);
-		std::string axe("y");
-		y_min=stalker::minCloud<T>(shape, axe); //Y come from the camera frame convention Y is down. 
-		y_max=stalker::maxCloud<T>(shape, axe);
+		std::string axe("z");
+		z_min=stalker::minCloud<T>(shape, axe); //Y come from the camera frame convention Y is down. Converted to map beforehand
+		z_max=stalker::maxCloud<T>(shape, axe);
 		
-		std::string axe2("x");
-		x_max=stalker::minCloud<T>(shape, axe2); //X come from the camera frame convention Y is to the right. 
-		x_min=stalker::maxCloud<T>(shape, axe2);
+		std::string axe2("y");
+		y_max=stalker::minCloud<T>(shape, axe2); //X come from the camera frame convention Y is to the right. 
+		y_min=stalker::maxCloud<T>(shape, axe2);
 		
-		double length=x_max-x_min;
+		double length=y_max-y_min;
 		
 		
 		
 		//Pass trhough to cut the top.
 		//TODO maybe find a better value.
-		double cut_at=(y_max+y_min)/2;
+		double cut_at=(z_max+z_min)/2;
 		std::cout<<"trimming "<< cut_at << " "<< y_max<<std::endl;
-		stalker::passThrough<T>(shape, cloud_trimmed, "y", cut_at, y_max);
+		stalker::passThrough<T>(shape, cloud_trimmed, "y", z_min, cut_at);
 		
 		
 		
@@ -93,7 +93,7 @@ inline void ChairRecon<T, DescriptorTypes>::doPipeline()
 		int ii=0;
 		while(flag_cluster==false && ii<15 ){
 			flag_cluster=clustering(cloud_trimmed);
-			cut_at=(cut_at+y_min)/2;
+			cut_at=(cut_at+z_min)/2;
 			ii++;
 			std::cout<<"in"<<std::endl;
 		}
