@@ -57,7 +57,7 @@ inline void ChairRecon<T, DescriptorTypes>::doPipeline()
 		//shape=boost::shared_ptr<pcl::PointCloud<T> >((*it));
 		
 		
-		stalker::voirPCL<T>(shape, shape);
+		//stalker::voirPCL<T>(shape, shape);
 		
 		
 		double y_max;
@@ -101,7 +101,7 @@ inline void ChairRecon<T, DescriptorTypes>::doPipeline()
 		std::cout << "working on trimmed pcl "<<std::endl;
 		/*pcl::copyPointCloud(cloud_trimmed, vec, *shape);
 		stalker::voirPCL<T>(shape, shape);*/
-		stalker::voirPCL<T>(cloud_trimmed, cloud_trimmed);
+		//stalker::voirPCL<T>(cloud_trimmed, cloud_trimmed);
 		
 		// Calculate Point
 		if(flag_cluster==false || ii>=15){
@@ -216,7 +216,7 @@ inline void ChairRecon<T, DescriptorTypes>::doPipeline()
 						srand (std::time (NULL));
 						pcl::KdTreeFLANN<T> kdtree;
 std::cout << "working on shape before kdtree "<<std::endl;
-						stalker::voirPCL<T>(shape, shape);
+					//	stalker::voirPCL<T>(shape, shape);
 						kdtree.setInputCloud (shape); //set the cloud as an input
 
 						int K = 10;
