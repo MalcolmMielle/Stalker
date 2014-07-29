@@ -32,7 +32,7 @@
 /****** GLOBAL VARIABLES *****/
 
 //Declare you're new Pipeline there
-SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>* cp= new SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>(new ShapeGlobal<PointType, Descriptor>("bob1"), new ShapeGlobal<PointType, Descriptor>("bob2"));
+SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>* cp= new SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>(new ShapeGlobalXtion<PointType, Descriptor>("bob1"), new ShapeGlobalXtion<PointType, Descriptor>("bob2"));
 
 std::string frame;
 

@@ -32,7 +32,7 @@
 /****** GLOBAL VARIABLES *****/
 
 //Declare you're new Pipeline there
-SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>* cp= new SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>(new ShapeGlobal<PointType, Descriptor>("bob1"), new ShapeGlobal<PointType, Descriptor>("bob2"));
+SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>* cp= new SegmentAndClustering<pcl::PointXYZRGBA, Descriptor>(new ShapeGlobalXtion<PointType, Descriptor>("bob1"), new ShapeGlobalXtion<PointType, Descriptor>("bob2"));
 
 std::string frame;
 
@@ -111,6 +111,7 @@ void service_client(ros::ServiceClient& client, tf::TransformListener* listener,
 		pose_stamped.header.stamp=ros::Time::now();
 		
 		
+		
 		srv.request.gotObject=true;
 		srv.request.pose = pose_stamped;
 		srv.request.robot_id=id;
@@ -145,7 +146,6 @@ void service_client(ros::ServiceClient& client, tf::TransformListener* listener,
 }
 
 
-
 void search_callback(const std_msgs::Bool::ConstPtr& boolean){
 	//std::cout << "Starting search" << std::endl;
 	search_status=boolean->data;
@@ -165,17 +165,26 @@ void mainCall(const sensor_msgs::PointCloud2ConstPtr& cloudy, ros::Time& timesta
 
 		if(main->gotModel()){
 			std::cout<<"Got model"<<std::endl;
+			 
+			sensor_msgs::PointCloud2 pointcloud;
+			pointcloud.header.frame_id="/map";
+			stalker::cutPointCloudForMap(*cloudy, pointcloud, *listener);
+					
 			pcl::PointCloud<PointType>::Ptr _scene(new pcl::PointCloud<PointType>() );
 			_scene->is_dense=false;
-			pcl::fromROSMsg(*cloudy, *_scene);
+			pcl::fromROSMsg(pointcloud, *_scene);
 			
-			main->doWork(cloudy);
+			stalker::passThrough<PointType>(_scene, _scene, "x", -10, 10);
+			stalker::passThrough<PointType>(_scene, _scene, "y", -10, 10);
+			
+			
+			main->doWork(_scene);
 			
 			
 			if(main->foundObject()){
 			//publish the new bouding box
 				//pose_pub.publish<>();
-				frame=cloudy->header.frame_id;
+				frame=pointcloud.header.frame_id;
 				service_client(client, listener, to, id);
 			}
 			
@@ -233,7 +242,7 @@ int main (int argc, char **argv){
 	ROS_INFO("Going all in");
 	/*******PARAMETERS****************/
 	
-	std::string path2model="/home/malcolm/ros_ws/hydro_ws/catkin_ws/src/Stalker/src/Test/milk.pcd";
+	std::string path2model="/home/robot/catkin_ws/src/Stalker/src/Test/milk.pcd";
 	std::string where2read="camera/depth/points_xyzrgb";
 	std::string base="base_frame_id";
 	std::string id_topic="id";
