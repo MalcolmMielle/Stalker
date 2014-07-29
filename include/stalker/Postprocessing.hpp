@@ -239,7 +239,7 @@ namespace stalker{
 		listener.waitForTransform(cloud_in.header.frame_id, "/map", t, ros::Duration(1));
 		std::cout <<"Done"<<std::endl;
 		//listener.lookupTransform(pose_in.header.frame_id, to, ros::Time(0), _transform);
-		listener.transformPointCloud("/map",t, pcloud, pcloud);
+		listener.transformPointCloud("/map",t, pcloud, cloud_in.header.frame_id, pcloud);
 		}
 		catch(tf::TransformException& ex){
 			ROS_ERROR("Received an exception trying to transform pose: %s", ex.what());
