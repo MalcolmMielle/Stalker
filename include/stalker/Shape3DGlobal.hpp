@@ -67,7 +67,7 @@ inline void ShapeGlobal<T, DescriptorType>::compute()
 template <typename T, typename DescriptorType>
 class ShapeGlobalXtion : public ShapeGlobal<T, DescriptorType> {
 
-
+public:
 	ShapeGlobalXtion(const std::string& name) : ShapeGlobal<T, DescriptorType>(name){};
 	ShapeGlobalXtion(const std::string& name, double sampling_size) : ShapeGlobal<T, DescriptorType>(name, sampling_size){};
 	ShapeGlobalXtion(const std::string& name, double sampling_size, double descriptor_radius) : ShapeGlobal<T, DescriptorType>(name, sampling_size, descriptor_radius){};
