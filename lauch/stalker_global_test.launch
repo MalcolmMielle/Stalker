@@ -1,0 +1,21 @@
+<launch>
+
+<group ns="robot0">
+<node name="stalker" pkg="stalker" type="stalker_global_test" output="screen">
+ <rosparam>
+       base_frame_id: robot0/base_link
+       id: 0
+     </rosparam>
+  </node>
+</group>
+
+<group ns="robot1">
+<node name="stalker" pkg="stalker" type="stalker_global_test" output="screen">
+ <rosparam>
+       base_frame_id: robot1/base_link
+       id: 1
+     </rosparam>
+  </node>
+</group>
+
+</launch>
