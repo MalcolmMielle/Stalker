@@ -60,7 +60,7 @@ class Gui{
 	}			
 
 	virtual void updatePCL(typename pcl::PointCloud<T>::Ptr cloud, std::string name){this->viewer->updatePointCloud(cloud, name);}
-	virtual void removePCL(std::string name){this->viewer->template removePointCloud (name);}
+	virtual void removePCL(std::string name){this->viewer->removePointCloud (name);}
 	
 	//Pipeline function : 
 	virtual void printPipeline(Pipeline<T, DescriptorType>& p){p.print(this);}

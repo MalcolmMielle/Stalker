@@ -10,7 +10,7 @@
 #include <pcl/filters/filter.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/statistical_outlier_removal.h>
-#include <pcl/keypoints/uniform_sampling.h>
+#include <pcl/filters/uniform_sampling.h>
 #include <pcl/features/normal_3d_omp.h>
 #include <time.h>
 #include "Postprocessing.hpp"
@@ -143,13 +143,13 @@ namespace stalker
 	template<typename T>
 	void downSample(typename pcl::PointCloud<T>::Ptr cloud, typename pcl::PointCloud<T>::Ptr cloud_out, double radius){
 		
-		pcl::PointCloud<int> sampled_indices;
+		//pcl::PointCloud<T> sampled_indices;
 
 		pcl::UniformSampling<T> uniform_sampling;
 		uniform_sampling.setInputCloud (cloud);
 		uniform_sampling.setRadiusSearch (radius);
-		uniform_sampling.compute (sampled_indices);
-		pcl::copyPointCloud (*cloud, sampled_indices.points, *cloud_out);
+		uniform_sampling.filter (*cloud_out);
+		//pcl::copyPointCloud (*cloud, sampled_indices.points, *cloud_out);
 		
 		std::cout << "Shape total points: " << cloud->size () << "; Selected Keypoints: " << cloud_out->size () << std::endl;
 	}
